@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Blitz</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary navigation">
+        <a class="brand" href="#" data-view-link="home" aria-label="Code Blitz">
+          <span>CODE</span>
+          <strong>BLITZ<br />II</strong>
+        </a>
+
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="home"><span>01</span> Mission</button>
+          <button class="nav-item" data-view="arena"><span>02</span> Arena</button>
+          <button class="nav-item" data-view="learn"><span>03</span> Learn</button>
+          <button class="nav-item" data-view="contests"><span>04</span> Contests</button>
+          <button class="nav-item hidden" id="historyNav" data-view="history"><span>05</span> History</button>
+          <button class="nav-item hidden" id="adminNav" data-view="admin"><span>06</span> Admin</button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="auth-actions">
+          <span class="rating-pill hidden" id="ratingPill">R 1200</span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">Light</button>
+          <button class="auth-link" id="loginOpen" type="button">Login</button>
+          <button class="auth-primary" id="signupOpen" type="button">Sign Up</button>
+        </div>
+      </aside>
+
+      <main>
+        <section class="view active" id="homeView">
+          <div class="home-stage">
+            <section class="hero-copy">
+              <p class="eyebrow">// CODE BLITZ PROGRAM - RANDOMIZED TASK FLYBY</p>
+              <h1>RETURN<br />TO THE<br />CODE</h1>
+              <p>
+                Six algorithmic tasks. Three easy, two medium, one hard. No manual picks:
+                the match payload is assembled at launch, then both pilots race through the same sequence.
+              </p>
+              <button class="big-play" id="quickPlay">OPEN ARENA</button>
+              <div class="home-modes">
+                <button data-open-mode="players">ONLINE</button>
+              </div>
+            </section>
+
+            <section class="code-visual" aria-label="Code mission visual">
+              <div class="visual-top">
+                <span>ONLINE BLITZ</span>
+                <strong>T-03:00</strong>
+              </div>
+              <div class="mission-orbit" aria-hidden="true">
+                <span class="mission-ring outer"></span>
+                <span class="mission-ring middle"></span>
+                <span class="mission-ring inner"></span>
+                <span class="mission-dot dot-a"></span>
+                <span class="mission-dot dot-b"></span>
+              </div>
+              <div class="code-grid">
+                <div class="cell muted">arr</div>
+                <div class="cell">map</div>
+                <div class="cell hot">if</div>
+                <div class="cell">sum</div>
+                <div class="cell">idx</div>
+                <div class="cell muted">for</div>
+                <div class="cell active">return</div>
+                <div class="cell">case</div>
+                <div class="cell">test</div>
+                <div class="cell hot">pass</div>
+                <div class="cell muted">log</div>
+                <div class="cell">hash</div>
+                <div class="cell">O(n)</div>
+                <div class="cell active">solve</div>
+                <div class="cell">run</div>
+                <div class="cell muted">edge</div>
+              </div>
+              <div class="visual-alert">!!</div>
+            </section>
+          </div>
+
+          <section class="home-panels">
+            <article>
+              <span class="panel-kicker">ONLINE NOW</span>
+              <strong>1 284 pilots</strong>
+              <small>matchmaking usually locks in under 5 seconds</small>
+            </article>
+            <article>
+              <span class="panel-kicker">PAYLOAD</span>
+              <strong>6 tasks: 3 Easy, 2 Medium, 1 Hard</strong>
+              <small>task order is shuffled before ignition</small>
+            </article>
+            <article>
+              <span class="panel-kicker">TASK BANK</span>
+              <strong>50 launch tasks</strong>
+              <small>arrays, strings, graphs, DP, search, and debugging</small>
+            </article>
+          </section>
+
+          <section class="about-mission">
+            <div>
+              <span class="panel-kicker">ABOUT US</span>
+              <h2>We make coding practice feel like a real match.</h2>
+            </div>
+            <p>
+              Code Blitz is built for programmers who want more than a quiet problem list:
+              fast rounds, visible pressure, readable feedback, and a clean arena where every solved task moves the race.
+            </p>
+            <div class="about-signals">
+              <span>speed</span>
+              <span>accuracy</span>
+              <span>debug flow</span>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="arenaView">
+          <section class="battle-top" aria-label="Blitz race header">
+            <div class="pilot-panel opponent-card">
+              <div>
+                <span class="avatar opponent">RV</span>
+                <div>
+                  <strong id="opponentBoardName">Rival</strong>
+                  <small>left channel</small>
+                </div>
+              </div>
+              <b id="opponentBoardProgress">0%</b>
+            </div>
+
+            <div class="battle-clock">
+              <span id="timer">03:00</span>
+              <small>match clock</small>
+            </div>
+
+            <div class="pilot-panel player-card">
+              <b id="playerBoardProgress">0%</b>
+              <div>
+                <div>
+                  <strong>You</strong>
+                  <small>right channel</small>
+                </div>
+                <span class="avatar player">YOU</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="center-clash" aria-label="Race progress toward center">
+            <span class="clash-label left">RIVAL</span>
+            <span class="clash-fill opponent" id="opponentClash"></span>
+            <span class="clash-center"></span>
+            <span class="clash-fill player" id="playerClash"></span>
+            <span class="clash-label right">YOU</span>
+          </div>
+
+          <section class="arena-orbit">
+            <div class="arena-circle" aria-label="Current arena task">
+              <span class="circle-kicker">// LIVE ARENA</span>
+              <strong id="arenaCircleTask">TASK 01</strong>
+              <small id="arenaCircleTitle">Pair Sprint</small>
+              <button class="primary-button circle-start" id="startMatch">Start</button>
+            </div>
+          </section>
+
+          <div class="task-ladder arena-task-strip" id="taskLadder" aria-label="Match task payload"></div>
+
+          <section class="mode-strip" aria-label="Competition modes">
+            <button class="mode active" data-mode="players">Online</button>
+            <button class="mode" data-mode="bot">Bot</button>
+            <button class="mode" data-mode="past">Past Self</button>
+            <button class="mode" data-mode="room">Room</button>
+            <select class="mode-select" id="botLevelSelect" aria-label="Bot level">
+              <option value="auto">Auto</option>
+              <option value="easy">Easy</option>
+              <option value="normal">Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </section>
+
+          <section class="room-panel hidden" id="roomPanel">
+            <div class="battle-head">
+              <h2>Friend Room</h2>
+              <span id="roomStatus">invite by login</span>
+            </div>
+            <div class="room-controls">
+              <input id="roomOpponentInput" type="text" placeholder="friend_login" autocomplete="off" />
+              <button class="primary-button" id="createRoom" type="button">Create</button>
+              <button class="primary-button" id="copyRoomLink" type="button">Copy Link</button>
+              <button class="primary-button" id="cancelRoom" type="button">Cancel</button>
+              <button class="primary-button" id="refreshRoomInvites" type="button">Invites</button>
+            </div>
+            <div class="room-invite-list" id="roomInviteList"></div>
+          </section>
+
+          <section class="arena-layout">
+            <aside class="problem-column">
+              <article class="problem-panel">
+                <div class="problem-header">
+                  <div>
+                    <span class="difficulty" id="difficulty">Medium</span>
+                    <h2 id="problemTitle">Pair Sprint</h2>
+                  </div>
+                  <div class="timer">
+                    <span id="problemTimerMirror">03:00</span>
+                    <small>limit</small>
+                  </div>
+                </div>
+                <button class="primary-button solution-button" id="solutionOpen" type="button">Editorial</button>
+                <p id="problemDescription"></p>
+                <div class="tags" id="problemTags"></div>
+                <div class="cases" id="cases"></div>
+              </article>
+
+              <section class="battle-panel">
+                <div class="battle-head">
+                  <h2>Status</h2>
+                  <span id="matchStatus">Awaiting launch</span>
+                </div>
+                <div class="racer">
+                  <div>
+                    <strong id="opponentName">Rival</strong>
+                    <small id="opponentPace">0% route</small>
+                  </div>
+                  <div class="race-track"><div class="race-fill opponent" id="opponentRace"></div></div>
+                </div>
+                <div class="racer">
+                  <div>
+                    <strong>You</strong>
+                    <small id="playerPace">0% route</small>
+                  </div>
+                  <div class="race-track"><div class="race-fill player" id="playerRace"></div></div>
+                </div>
+              </section>
+            </aside>
+
+            <section class="workspace">
+              <div class="editor-toolbar">
+                <label class="language-select">
+                  <span>Language</span>
+                  <select id="languageSelect" aria-label="Programming language">
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="python">Python</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="go">Go</option>
+                    <option value="rust">Rust</option>
+                  </select>
+                </label>
+                <div class="debug-controls">
+                  <button id="formatCode">Format</button>
+                  <button id="runCode">Run</button>
+                  <button class="success" id="submitCode">Submit</button>
+                </div>
+              </div>
+
+              <div class="code-race">
+                <div class="editor-shell">
+                  <pre class="code-highlight" id="codeHighlight" aria-hidden="true"></pre>
+                  <textarea id="codeEditor" spellcheck="false" aria-label="Code editor"></textarea>
+                </div>
+              </div>
+
+              <section class="testcase-panel">
+                <div class="console-tabs" aria-label="Code output tabs">
+                  <button class="console-tab active" data-console-tab="terminal" type="button">Terminal</button>
+                  <span id="testSummary">ready</span>
+                </div>
+                <pre class="terminal-output" id="terminalOutput" aria-live="polite"></pre>
+              </section>
+
+            </section>
+          </section>
+        </section>
+
+        <section class="view simple-view learn-view" id="learnView">
+          <div class="admin-head">
+            <div>
+              <span class="panel-kicker">// LEARNING PATHS</span>
+              <h1>Courses</h1>
+              <small class="learn-status" id="learnStatus">catalog ready</small>
+            </div>
+            <div class="learn-filter" aria-label="Course filters">
+              <button class="learn-filter-button active" data-course-filter="all" type="button">Intro</button>
+            </div>
+          </div>
+          <p>
+            Start here to understand the platform, the arena flow, the editor, test checks,
+            submissions, and rating before playing serious matches.
+          </p>
+          <section class="course-recommendations" id="courseRecommendations" aria-label="Recommended courses"></section>
+          <div class="course-grid" id="courseGrid"></div>
+          <section class="course-detail-panel hidden" id="courseDetailPanel">
+            <div class="battle-head">
+              <h2 id="courseDetailTitle">Course Detail</h2>
+              <span id="courseDetailStatus">select course</span>
+            </div>
+            <p id="courseDetailSummary"></p>
+            <div class="course-lesson-list" id="courseLessonList"></div>
+            <div class="course-practice-list" id="coursePracticeList"></div>
+          </section>
+        </section>
+
+        <section class="view simple-view contests-view" id="contestsView">
+          <h1>Contests</h1>
+          <p>Separate tournament window for scheduled blitz events, ladders, and ranked cups.</p>
+          <div class="contests-grid">
+            <article class="contest-card live">
+              <span>LIVE // 03:00</span>
+              <strong>Night Sprint Cup</strong>
+              <small>6 random tasks · ranked · 128 pilots</small>
+              <button data-open-mode="players">Enter Arena</button>
+            </article>
+            <article class="contest-card">
+              <span>QUEUE</span>
+              <strong>Online Matchmaking</strong>
+              <small>Next step: connect real users through backend rooms and live progress.</small>
+              <button data-open-mode="players">Find Match</button>
+            </article>
+            <article class="contest-card">
+              <span>RANKED</span>
+              <strong>Blitz Ladder</strong>
+              <small>Ratings, fair task sets, and match history will use the new database schema.</small>
+              <button data-open-mode="players">Open Arena</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="view simple-view history-view" id="historyView">
+          <div class="admin-head">
+            <div>
+              <span class="panel-kicker">// MATCH ARCHIVE</span>
+              <h1>Replay</h1>
+            </div>
+            <button class="primary-button" id="historyRefresh" type="button">Refresh</button>
+          </div>
+
+          <div class="history-layout">
+            <section class="history-list-panel">
+              <div class="battle-head">
+                <h2>Matches</h2>
+                <span id="historyStatus">login required</span>
+              </div>
+              <div class="history-match-list" id="historyMatchList"></div>
+            </section>
+
+            <section class="history-replay-panel">
+              <div class="battle-head">
+                <h2>Replay Timeline</h2>
+                <span id="replayStatus">select match</span>
+              </div>
+              <div class="replay-summary" id="replaySummary"></div>
+              <div class="replay-task-grid" id="replayTasks"></div>
+              <div class="replay-events" id="replayEvents"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view simple-view admin-view" id="adminView">
+          <div class="admin-head">
+            <div>
+              <span class="panel-kicker">// ADMIN CONTROL</span>
+              <h1>Problem Lab</h1>
+            </div>
+            <div class="admin-head-actions">
+              <button class="primary-button" id="adminNew" type="button">New</button>
+              <button class="primary-button" id="adminRefresh" type="button">Refresh</button>
+              <button class="primary-button" id="adminSignalsRefresh" type="button">Signals</button>
+              <button class="primary-button" id="adminCalibrationRefresh" type="button">Calibration</button>
+            </div>
+          </div>
+
+          <section class="admin-signals-panel">
+            <div class="battle-head">
+              <h2>Anti-Cheat Signals</h2>
+              <span id="adminSignalsStatus">waiting</span>
+            </div>
+            <div class="admin-signal-list" id="adminSignalList"></div>
+          </section>
+
+          <section class="admin-signals-panel">
+            <div class="battle-head">
+              <h2>Problem Calibration</h2>
+              <span id="adminCalibrationStatus">waiting</span>
+            </div>
+            <div class="admin-signal-list" id="adminCalibrationList"></div>
+          </section>
+
+          <div class="admin-layout">
+            <section class="admin-list-panel">
+              <div class="battle-head">
+                <h2>Tasks</h2>
+                <span id="adminStatus">admin only</span>
+              </div>
+              <div class="admin-problem-list" id="adminProblemList"></div>
+            </section>
+
+            <form class="admin-form" id="adminProblemForm">
+              <div class="form-grid">
+                <label>
+                  <span>Title</span>
+                  <input id="adminTitle" type="text" placeholder="Binary Signal" required />
+                </label>
+                <label>
+                  <span>Slug</span>
+                  <input id="adminSlug" type="text" placeholder="binary-signal" />
+                </label>
+                <label>
+                  <span>Difficulty</span>
+                  <select id="adminDifficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Concept</span>
+                  <input id="adminConcept" type="text" value="arrays" />
+                </label>
+                <label>
+                  <span>Tags</span>
+                  <input id="adminTags" type="text" placeholder="array, hash-map" />
+                </label>
+                <label>
+                  <span>Speed</span>
+                  <input id="adminSpeed" type="number" min="1" max="10" value="5" />
+                </label>
+              </div>
+
+              <label>
+                <span>Statement</span>
+                <textarea id="adminStatement" rows="5" required placeholder="Describe the task clearly enough for a player to solve it."></textarea>
+              </label>
+
+              <label>
+                <span>Starter Code</span>
+                <textarea id="adminStarter" rows="7" spellcheck="false">function solve() {
+  return null;
+}</textarea>
+              </label>
+
+              <label>
+                <span>Solution Notes</span>
+                <textarea id="adminSolutionNotes" rows="6" spellcheck="true" placeholder="Explain the intended approach, complexity, and edge cases for editors."></textarea>
+              </label>
+
+              <label>
+                <span>Tests JSON</span>
+                <textarea id="adminTests" rows="10" spellcheck="false">[
+  {"input_json":[1,2],"expected_json":3,"is_sample":true,"is_hidden":false},
+  {"input_json":[10,5],"expected_json":15,"is_sample":false,"is_hidden":true}
+]</textarea>
+              </label>
+
+              <section class="admin-review-box">
+                <div class="battle-head">
+                  <h2>Editorial Review</h2>
+                  <span id="adminReviewStatus">select task</span>
+                </div>
+                <label>
+                  <span>Review Notes</span>
+                  <textarea id="adminReviewNotes" rows="4" spellcheck="true" placeholder="What should be improved or approved?"></textarea>
+                </label>
+                <div class="admin-review-actions">
+                  <button class="primary-button" data-review-status="approved" type="button">Approve</button>
+                  <button class="primary-button" data-review-status="needs_changes" type="button">Needs Changes</button>
+                  <button class="primary-button" data-review-status="comment" type="button">Comment</button>
+                </div>
+                <div class="admin-review-list" id="adminReviewList"></div>
+              </section>
+
+              <div class="admin-actions">
+                <p id="adminMessage">Create a task with at least one sample and one hidden test.</p>
+                <button class="auth-submit" id="adminSubmit" type="submit">Create Task</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <div class="auth-modal" id="authModal" aria-hidden="true">
+      <section class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button class="auth-close" id="authClose" type="button" aria-label="Close registration">×</button>
+        <div class="auth-copy">
+          <span>// ACCOUNT ACCESS</span>
+          <h2 id="authTitle">Create Account</h2>
+          <p>Save your profile, rating name, and future match history for Code Blitz.</p>
+        </div>
+        <form class="auth-form" id="authForm">
+          <label id="nameField">
+            <span>Username</span>
+            <input id="authName" type="text" placeholder="code_runner" autocomplete="username" />
+          </label>
+          <label>
+            <span>Email</span>
+            <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="authPassword" type="password" placeholder="8+ characters" autocomplete="new-password" required />
+          </label>
+          <div class="provider-auth" aria-label="Social account access">
+            <button class="provider-button" id="googleAuth" type="button" aria-label="Continue with Google">
+              <img src="assets/google-mark.png" alt="" />
+              <span>Google</span>
+            </button>
+            <button class="provider-button" id="githubAuth" type="button" aria-label="Continue with GitHub">
+              <img src="assets/github-mark.png" alt="" />
+              <span>GitHub</span>
+            </button>
+          </div>
+          <p class="auth-message" id="authMessage"></p>
+          <button class="auth-submit" id="authSubmit" type="submit">Create Account</button>
+        </form>
+      </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

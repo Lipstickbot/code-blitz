@@ -1,0 +1,63 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+.run-deps/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+.pnpm/
+.pnpm-store/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local runtime and temp artifacts
+tmp/
+temp/
+_tmp_*
+**/tmp*/
+*.tmp
+*.temp
+
+# Downloaded package archives and extracted dependency folders
+*.tgz
+next-*-extract/
+next-restore/
+swc-helpers-extract/
+
+# Local experiments / data exports not needed for the web app
+submission*.csv
+final_*_attempt.py
+improve_model.py
+model_submission.py
+tune_logistic.py
+test_id.py
+agentic-bank-public/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

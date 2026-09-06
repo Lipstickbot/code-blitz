@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: blitzcode
+      POSTGRES_PASSWORD: blitzcode
+      POSTGRES_DB: blitzcode
+    ports:
+      - "5432:5432"
+    volumes:
+      - blitzcode_db_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - blitzcode_redis_data:/data
+
+volumes:
+  blitzcode_db_data:
+  blitzcode_redis_data:

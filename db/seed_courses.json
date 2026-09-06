@@ -1,0 +1,50 @@
+[
+  {
+    "slug": "code-blitz-platform-start",
+    "title": "Code Blitz Platform Start",
+    "level": "beginner",
+    "access_type": "free",
+    "price_cents": 0,
+    "summary": "A free introduction to Code Blitz: what the platform is, how arena matches work, and how to practice without getting lost.",
+    "tags": ["platform", "arena", "debugging", "rating"],
+    "practice_slugs": ["pair-sprint", "clean-duplicates", "first-unique", "max-streak", "reverse-words-lite"],
+    "lessons": [
+      {
+        "position": 1,
+        "title": "What Code Blitz Is",
+        "duration_minutes": 7,
+        "kind": "lesson",
+        "summary": "Understand the idea of the platform before jumping into matches.",
+        "content": "Code Blitz is a coding arena where practice feels like a live match. You solve algorithmic tasks, see progress, run tests, submit solutions, and build rating after registration.",
+        "checklist": ["Know where Arena starts", "Know why tasks are randomized", "Know that rating appears after login"]
+      },
+      {
+        "position": 2,
+        "title": "How Arena Matches Work",
+        "duration_minutes": 10,
+        "kind": "lesson",
+        "summary": "Learn the match payload, timer, task strip, and progress race.",
+        "content": "A ranked blitz match gives both players the same payload: three easy tasks, two medium tasks, and one hard task. The goal is to solve accurately under one shared match timer.",
+        "checklist": ["Read the current task first", "Use Run for sample tests", "Use Submit only when the idea is ready"]
+      },
+      {
+        "position": 3,
+        "title": "Run, Submit, and Debug",
+        "duration_minutes": 12,
+        "kind": "practice",
+        "summary": "Use the editor, terminal output, and test results like a real coding workflow.",
+        "content": "Run checks a smaller visible set of tests so you can debug quickly. Submit checks a larger hidden set and records the real result. When a case fails, compare expected and actual before changing the algorithm.",
+        "checklist": ["Read expected vs actual", "Fix one bug at a time", "Keep solve(...) as the entry point"]
+      },
+      {
+        "position": 4,
+        "title": "Your First Practice Route",
+        "duration_minutes": 15,
+        "kind": "practice",
+        "summary": "Open linked starter tasks and learn the basic rhythm of Code Blitz.",
+        "content": "Start with small tasks to learn the platform rhythm: read, code, run, inspect output, submit, then move to the next task. Speed comes after the loop feels calm.",
+        "checklist": ["Solve one array task", "Solve one string task", "Review a failed test if one appears"]
+      }
+    ]
+  }
+]
