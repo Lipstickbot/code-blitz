@@ -149,9 +149,10 @@ alembic revision --autogenerate -m "describe change"
   — сервер хранит `started_at` и `duration_minutes`, дедлайн всегда считается на сервере
 - Лидерборд: `/api/leaderboard/global`, `/api/leaderboard/blitz`
 
-## Текущий архитектурный переход
+## Текущая архитектура
 
-Фронт-прототип пока не трогаем. Backend постепенно переводится на схему `../../db/schema_v2.sql`:
+Активный frontend сейчас находится в корне репозитория: `index.html`, `app.js`, `styles.css`, `config.js`.
+Backend работает по SQLAlchemy-моделям и Alembic-миграциям, а обзорная схема лежит в `../../db/schema.sql`:
 
 - регистрация уже создает `user_stats` с рейтингом 1200;
 - лидерборд читает рейтинг из `user_stats`;

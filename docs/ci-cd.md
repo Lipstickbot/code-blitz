@@ -11,7 +11,6 @@ On pull requests and pushes it runs:
 - Redis-backed rate limiter environment through a Redis service;
 - static UI JavaScript syntax check with `node --check app.js`;
 - runtime frontend config through `config.js` and staging Caddy override;
-- Next frontend install and `npm run build`;
 - backend Docker image build.
 
 The backend CI also pulls judge runtime images:
@@ -39,7 +38,6 @@ For the first staging target, point `DEPLOY_PATH` to the repository folder and r
 The target server should already have:
 
 - Docker and Docker Compose;
-- Python backend dependencies installed in the deployment environment;
 - a configured `blitzcode-mvp/backend/.env.production`;
 - for staging, a configured `blitzcode-mvp/backend/.env.staging`;
 - DNS pointing the staging domain to the server;
