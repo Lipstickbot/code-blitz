@@ -5,7 +5,21 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import engine, Base
-from app.routers import admin, auth, blitz, health, judge, leaderboard, learning, matchmaking, matches, problems, profile, submissions
+from app.routers import (
+    admin,
+    auth,
+    blitz,
+    health,
+    judge,
+    leaderboard,
+    learning,
+    matchmaking,
+    matches,
+    problems,
+    profile,
+    submissions,
+    tournaments,
+)
 from app.services.env_validation import assert_valid_startup_config
 
 
@@ -44,6 +58,7 @@ app.include_router(learning.router)
 app.include_router(matchmaking.router)
 app.include_router(matches.router)
 app.include_router(profile.router)
+app.include_router(tournaments.router)
 
 
 @app.get("/")

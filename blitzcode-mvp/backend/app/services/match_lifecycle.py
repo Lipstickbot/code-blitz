@@ -32,6 +32,10 @@ async def finish_match(
             participant.finished_at = now
 
     await rating.finalize_match_rating(db, match)
+    if match.mode == "tournament":
+        from app.services.tournaments import advance_tournament_after_match
+
+        await advance_tournament_after_match(db, match)
 
     event_payload = {
         "reason": reason,

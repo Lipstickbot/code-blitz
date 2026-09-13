@@ -44,8 +44,13 @@ Why: `submissions` stores the big result, `submission_case_results` stores detai
 - `match_events` - timeline for replay and live progress.
 - `matchmaking_queue` - users waiting for online matchmaking by rating.
 - `friend_rooms` - invite rooms for playing with a friend by username.
+- `tournaments` - tournament room, creator, status, player count and champion.
+- `tournament_participants` - users inside a tournament, seed order and elimination state.
+- `tournament_rounds` - bracket rounds such as Round 1, Semifinal and Final.
+- `tournament_bracket_matches` - one bracket node, linked to a real `matches` row and to the next bracket node.
 
 Why: match task payload is stored separately so both players always receive the same task set.
+For tournaments, the bracket stores only structure and advancement; the actual coding race still uses the normal `matches`, `match_participants` and `match_tasks` tables.
 
 ### Learning
 
@@ -103,6 +108,8 @@ Status: mostly done.
 
 - Add WebSocket invite notifications for friend rooms.
 - Add rematch flow.
+- Add tournament room UI for up to 32 players.
+- Add live tournament bracket updates over WebSocket.
 - Add queue cancellation cleanup.
 - Add stronger rating windows:
   - close rating first;

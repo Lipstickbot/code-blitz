@@ -324,6 +324,71 @@ class FriendRoomOut(BaseModel):
     expires_at: datetime | None = None
 
 
+class TournamentCreateIn(BaseModel):
+    name: str = Field(min_length=3, max_length=120)
+    player_usernames: list[str] = Field(min_length=1, max_length=31)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("player_usernames")
+    @classmethod
+    def validate_player_usernames(cls, value: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        for username in value:
+            normalized = username.strip()
+            if not normalized:
+                continue
+            if not re.fullmatch(r"[A-Za-z0-9_]+", normalized):
+                raise ValueError("Usernames can contain only letters, numbers, and underscores")
+            if normalized in cleaned:
+                raise ValueError("Duplicate usernames are not allowed")
+            cleaned.append(normalized)
+        return cleaned
+
+
+class TournamentParticipantOut(BaseModel):
+    id: str
+    user_id: str
+    username: str
+    seed: int
+    status: str
+    eliminated_round: int | None = None
+
+
+class TournamentBracketMatchOut(BaseModel):
+    id: str
+    round_number: int
+    bracket_position: int
+    match_id: str | None = None
+    status: str
+    left_participant_id: str | None = None
+    right_participant_id: str | None = None
+    left_username: str | None = None
+    right_username: str | None = None
+    winner_participant_id: str | None = None
+    loser_participant_id: str | None = None
+    next_bracket_match_id: str | None = None
+    next_slot: str | None = None
+
+
+class TournamentOut(BaseModel):
+    id: str
+    name: str
+    status: str
+    creator_user_id: str
+    player_count: int
+    max_players: int
+    champion_user_id: str | None = None
+    created_at: datetime
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    participants: list[TournamentParticipantOut]
+    bracket: list[TournamentBracketMatchOut]
+
+
 class MatchParticipantOut(BaseModel):
     user_id: str | None = None
     side: str

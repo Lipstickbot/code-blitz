@@ -60,15 +60,18 @@
 - Judge language support matrix API and frontend executable/planned language states.
 - Personalized learning recommendations endpoint and Learn screen recommendation rail.
 - Richer lesson content seed with theory text, checklist items and database fields.
+- Tournament backend foundation: 2/4/8/16/32-player rooms, bracket rounds, automatic winner advance and final champion.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
+- Add tournament room UI: invite list, bracket view, current round and champion screen.
 
 ## Later
 
 - OAuth login with Google/GitHub after local auth is stable.
 - Friend-room polish: WebSocket invite notifications and rematch flow.
+- Tournament polish: live bracket WebSocket updates, spectator mode and admin tournament controls.
 - Learning polish: more courses later, stronger recommendation signals and premium checkout integration if paid tracks return.
 - Typed adapter contract for compiled language judging: C++, Java, Go, Rust.

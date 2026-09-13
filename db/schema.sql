@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TYPE user_role AS ENUM ('player', 'admin');
 CREATE TYPE problem_difficulty AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE match_mode AS ENUM ('online', 'bot', 'ghost', 'solo', 'friend');
+CREATE TYPE match_mode AS ENUM ('online', 'bot', 'ghost', 'solo', 'friend', 'tournament');
 CREATE TYPE match_status AS ENUM ('waiting', 'active', 'finished', 'cancelled', 'expired');
 CREATE TYPE participant_side AS ENUM ('left', 'right');
 CREATE TYPE submission_status AS ENUM ('queued', 'running', 'accepted', 'wrong_answer', 'runtime_error', 'time_limit');
@@ -132,6 +132,61 @@ CREATE TABLE friend_rooms (
   expires_at TIMESTAMPTZ
 );
 
+CREATE TABLE tournaments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL,
+  creator_user_id UUID NOT NULL REFERENCES users(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  max_players INTEGER NOT NULL DEFAULT 32,
+  player_count INTEGER NOT NULL,
+  champion_user_id UUID REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  started_at TIMESTAMPTZ,
+  finished_at TIMESTAMPTZ
+);
+
+CREATE TABLE tournament_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  seed INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  eliminated_round INTEGER,
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  eliminated_at TIMESTAMPTZ,
+  UNIQUE (tournament_id, user_id),
+  UNIQUE (tournament_id, seed)
+);
+
+CREATE TABLE tournament_rounds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+  round_number INTEGER NOT NULL,
+  name VARCHAR(40) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'waiting',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  finished_at TIMESTAMPTZ,
+  UNIQUE (tournament_id, round_number)
+);
+
+CREATE TABLE tournament_bracket_matches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments(id) ON DELETE CASCADE,
+  round_id UUID NOT NULL REFERENCES tournament_rounds(id) ON DELETE CASCADE,
+  match_id UUID UNIQUE REFERENCES matches(id),
+  bracket_position INTEGER NOT NULL,
+  left_participant_id UUID REFERENCES tournament_participants(id),
+  right_participant_id UUID REFERENCES tournament_participants(id),
+  winner_participant_id UUID REFERENCES tournament_participants(id),
+  loser_participant_id UUID REFERENCES tournament_participants(id),
+  status VARCHAR(20) NOT NULL DEFAULT 'waiting',
+  next_bracket_match_id UUID REFERENCES tournament_bracket_matches(id),
+  next_slot VARCHAR(10),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  finished_at TIMESTAMPTZ,
+  UNIQUE (round_id, bracket_position)
+);
+
 CREATE TABLE courses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug VARCHAR(100) NOT NULL UNIQUE,
@@ -252,6 +307,11 @@ CREATE INDEX idx_match_tasks_match ON match_tasks(match_id, position);
 CREATE INDEX idx_matchmaking_queue_search ON matchmaking_queue(status, mode, rating_snapshot, queued_at);
 CREATE INDEX idx_friend_rooms_invited_status ON friend_rooms(invited_user_id, status, created_at DESC);
 CREATE INDEX idx_friend_rooms_creator_status ON friend_rooms(creator_user_id, status, created_at DESC);
+CREATE INDEX idx_tournaments_creator_status ON tournaments(creator_user_id, status, created_at DESC);
+CREATE INDEX idx_tournament_participants_user_status ON tournament_participants(user_id, status);
+CREATE INDEX idx_tournament_rounds_tournament ON tournament_rounds(tournament_id, round_number);
+CREATE INDEX idx_tournament_bracket_status ON tournament_bracket_matches(tournament_id, status);
+CREATE INDEX idx_tournament_bracket_match ON tournament_bracket_matches(match_id);
 CREATE INDEX idx_courses_catalog ON courses(status, access_type, level);
 CREATE INDEX idx_course_lessons_course ON course_lessons(course_id, position);
 CREATE INDEX idx_course_enrollments_user ON course_enrollments(user_id, status);

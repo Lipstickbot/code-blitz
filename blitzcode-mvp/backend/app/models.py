@@ -314,6 +314,100 @@ class FriendRoom(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class Tournament(Base):
+    __tablename__ = "tournaments"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    name: Mapped[str] = mapped_column(String(120))
+    creator_user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    max_players: Mapped[int] = mapped_column(Integer, default=32)
+    player_count: Mapped[int] = mapped_column(Integer)
+    champion_user_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    participants: Mapped[list["TournamentParticipant"]] = relationship(
+        back_populates="tournament",
+        cascade="all, delete-orphan",
+    )
+    rounds: Mapped[list["TournamentRound"]] = relationship(back_populates="tournament", cascade="all, delete-orphan")
+
+
+class TournamentParticipant(Base):
+    __tablename__ = "tournament_participants"
+    __table_args__ = (
+        UniqueConstraint("tournament_id", "user_id", name="uq_tournament_participant_user"),
+        UniqueConstraint("tournament_id", "seed", name="uq_tournament_participant_seed"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    tournament_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("tournaments.id", ondelete="CASCADE"))
+    user_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"))
+    seed: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    eliminated_round: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    eliminated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    tournament: Mapped["Tournament"] = relationship(back_populates="participants")
+
+
+class TournamentRound(Base):
+    __tablename__ = "tournament_rounds"
+    __table_args__ = (UniqueConstraint("tournament_id", "round_number", name="uq_tournament_round_number"),)
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    tournament_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("tournaments.id", ondelete="CASCADE"))
+    round_number: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(20), default="waiting")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    tournament: Mapped["Tournament"] = relationship(back_populates="rounds")
+    bracket_matches: Mapped[list["TournamentBracketMatch"]] = relationship(
+        back_populates="round",
+        cascade="all, delete-orphan",
+    )
+
+
+class TournamentBracketMatch(Base):
+    __tablename__ = "tournament_bracket_matches"
+    __table_args__ = (
+        UniqueConstraint("round_id", "bracket_position", name="uq_tournament_bracket_position"),
+        UniqueConstraint("match_id", name="uq_tournament_bracket_match"),
+    )
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    tournament_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("tournaments.id", ondelete="CASCADE"))
+    round_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("tournament_rounds.id", ondelete="CASCADE"))
+    match_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("matches.id"), nullable=True)
+    bracket_position: Mapped[int] = mapped_column(Integer)
+    left_participant_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tournament_participants.id"), nullable=True
+    )
+    right_participant_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tournament_participants.id"), nullable=True
+    )
+    winner_participant_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tournament_participants.id"), nullable=True
+    )
+    loser_participant_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tournament_participants.id"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), default="waiting")
+    next_bracket_match_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tournament_bracket_matches.id"), nullable=True
+    )
+    next_slot: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    round: Mapped["TournamentRound"] = relationship(back_populates="bracket_matches")
+
+
 class SubmissionCaseResult(Base):
     __tablename__ = "submission_case_results"
     __table_args__ = (UniqueConstraint("submission_id", "position", name="uq_submission_case_position"),)
@@ -452,6 +546,11 @@ Index("ix_matchmaking_queue_status_rating_queued", MatchmakingQueue.status, Matc
 Index("ix_matchmaking_queue_user_status_queued", MatchmakingQueue.user_id, MatchmakingQueue.status, MatchmakingQueue.queued_at)
 Index("ix_friend_rooms_invited_status_created", FriendRoom.invited_user_id, FriendRoom.status, FriendRoom.created_at)
 Index("ix_friend_rooms_creator_status_created", FriendRoom.creator_user_id, FriendRoom.status, FriendRoom.created_at)
+Index("ix_tournaments_creator_status_created", Tournament.creator_user_id, Tournament.status, Tournament.created_at)
+Index("ix_tournament_participants_user_status", TournamentParticipant.user_id, TournamentParticipant.status)
+Index("ix_tournament_rounds_tournament_number", TournamentRound.tournament_id, TournamentRound.round_number)
+Index("ix_tournament_bracket_tournament_status", TournamentBracketMatch.tournament_id, TournamentBracketMatch.status)
+Index("ix_tournament_bracket_match_id", TournamentBracketMatch.match_id)
 Index("ix_submissions_user_created", Submission.user_id, Submission.created_at)
 Index("ix_submissions_problem_created", Submission.problem_id, Submission.created_at)
 Index("ix_submissions_match_task_created", Submission.match_id, Submission.match_task_id, Submission.created_at)
