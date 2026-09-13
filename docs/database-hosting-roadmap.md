@@ -69,7 +69,7 @@ Why: the learning section uses the same problem bank as Arena, so lessons can se
 
 ## Seed Files
 
-- `db/seed_problems.json` - current task library, now 71 tasks.
+- `db/seed_problems.json` - current task library, now 100 tasks.
 - `db/seed_courses.json` - current course library, now one free intro course.
 - `blitzcode-mvp/backend/seed.py` - loads seed data into PostgreSQL.
 
@@ -102,7 +102,7 @@ Status: mostly done.
   - average runtime;
   - common failed test.
 - Add versioning for tasks and tests so old match results still make sense after edits.
-- Expand task library from 71 to 100+ original tasks.
+- Expand task library from 100 to 150+ original tasks.
 
 ### Phase 3: Improve Matchmaking And Realtime
 

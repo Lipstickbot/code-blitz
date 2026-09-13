@@ -1276,5 +1276,527 @@
       { "input": ["flaw", "lawn"], "expected": 2, "hidden": true },
       { "input": ["blitz", "bolt"], "expected": 3, "hidden": true }
     ]
+  },
+  {
+    "slug": "parity-indexes",
+    "title": "Parity Indexes",
+    "difficulty": "easy",
+    "tags": ["array", "parity"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 150,
+    "speed_score": 9,
+    "statement": "Return the indices where the number parity matches the index parity.",
+    "starter_code_js": "function solve(nums) {\n  // return matching indices\n  return [];\n}",
+    "cases": [
+      { "input": [[2, 3, 4, 7]], "expected": [0, 1, 2, 3], "hidden": false },
+      { "input": [[1, 2, 3]], "expected": [], "hidden": false },
+      { "input": [[]], "expected": [], "hidden": false },
+      { "input": [[0, 0, 1, 1, 4]], "expected": [0, 4], "hidden": true },
+      { "input": [[5, 8, 9, 10, 11, 12]], "expected": [1, 3, 5], "hidden": true }
+    ]
+  },
+  {
+    "slug": "trim-zero-edges",
+    "title": "Trim Zero Edges",
+    "difficulty": "easy",
+    "tags": ["array", "two-pointers"],
+    "concept_group": "two_pointers",
+    "estimated_seconds": 180,
+    "speed_score": 8,
+    "statement": "Remove zeros from the beginning and end of the array, but keep zeros in the middle.",
+    "starter_code_js": "function solve(nums) {\n  // return trimmed array\n  return [];\n}",
+    "cases": [
+      { "input": [[0, 0, 3, 0, 4, 0]], "expected": [3, 0, 4], "hidden": false },
+      { "input": [[0, 0]], "expected": [], "hidden": false },
+      { "input": [[1, 2, 3]], "expected": [1, 2, 3], "hidden": false },
+      { "input": [[0, 5, 0, 0]], "expected": [5], "hidden": true },
+      { "input": [[0, -1, 0, 2, 0]], "expected": [-1, 0, 2], "hidden": true }
+    ]
+  },
+  {
+    "slug": "rotate-once",
+    "title": "Rotate Once",
+    "difficulty": "easy",
+    "tags": ["array"],
+    "concept_group": "array_transform",
+    "estimated_seconds": 150,
+    "speed_score": 9,
+    "statement": "Rotate the array one step to the right. Return an empty array if input is empty.",
+    "starter_code_js": "function solve(nums) {\n  // return rotated array\n  return [];\n}",
+    "cases": [
+      { "input": [[1, 2, 3]], "expected": [3, 1, 2], "hidden": false },
+      { "input": [[7]], "expected": [7], "hidden": false },
+      { "input": [[]], "expected": [], "hidden": false },
+      { "input": [[0, -1, 5, 8]], "expected": [8, 0, -1, 5], "hidden": true },
+      { "input": [[4, 4, 9]], "expected": [9, 4, 4], "hidden": true }
+    ]
+  },
+  {
+    "slug": "title-initials",
+    "title": "Title Initials",
+    "difficulty": "easy",
+    "tags": ["string"],
+    "concept_group": "string_parse",
+    "estimated_seconds": 170,
+    "speed_score": 9,
+    "statement": "Given a phrase, return the uppercase first letter of each non-empty word joined together.",
+    "starter_code_js": "function solve(phrase) {\n  // return initials\n  return \"\";\n}",
+    "cases": [
+      { "input": ["code blitz arena"], "expected": "CBA", "hidden": false },
+      { "input": ["  fast   match "], "expected": "FM", "hidden": false },
+      { "input": [""], "expected": "", "hidden": false },
+      { "input": ["one"], "expected": "O", "hidden": true },
+      { "input": ["learn build ship"], "expected": "LBS", "hidden": true }
+    ]
+  },
+  {
+    "slug": "target-blocks",
+    "title": "Target Blocks",
+    "difficulty": "easy",
+    "tags": ["array", "counter"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 190,
+    "speed_score": 8,
+    "statement": "Return how many contiguous blocks of the target value appear in the array.",
+    "starter_code_js": "function solve(nums, target) {\n  // return block count\n  return 0;\n}",
+    "cases": [
+      { "input": [[1, 1, 2, 1], 1], "expected": 2, "hidden": false },
+      { "input": [[3, 3, 3], 3], "expected": 1, "hidden": false },
+      { "input": [[], 5], "expected": 0, "hidden": false },
+      { "input": [[0, 1, 0, 0, 1, 0], 0], "expected": 3, "hidden": true },
+      { "input": [[2, 1, 2, 2, 2, 1], 2], "expected": 2, "hidden": true }
+    ]
+  },
+  {
+    "slug": "sorted-squares-lite",
+    "title": "Sorted Squares Lite",
+    "difficulty": "easy",
+    "tags": ["array", "two-pointers"],
+    "concept_group": "two_pointers",
+    "estimated_seconds": 210,
+    "speed_score": 8,
+    "statement": "Given a sorted array of integers, return the squares sorted in nondecreasing order.",
+    "starter_code_js": "function solve(nums) {\n  // return sorted squares\n  return [];\n}",
+    "cases": [
+      { "input": [[-2, -1, 3]], "expected": [1, 4, 9], "hidden": false },
+      { "input": [[0, 2, 4]], "expected": [0, 4, 16], "hidden": false },
+      { "input": [[]], "expected": [], "hidden": false },
+      { "input": [[-5, -3, -1]], "expected": [1, 9, 25], "hidden": true },
+      { "input": [[-4, -1, 0, 2, 3]], "expected": [0, 1, 4, 9, 16], "hidden": true }
+    ]
+  },
+  {
+    "slug": "password-score-lite",
+    "title": "Password Score Lite",
+    "difficulty": "easy",
+    "tags": ["string", "counter"],
+    "concept_group": "classification",
+    "estimated_seconds": 190,
+    "speed_score": 8,
+    "statement": "Return how many character groups appear in the password: lowercase, uppercase, digit and symbol.",
+    "starter_code_js": "function solve(password) {\n  // return group count\n  return 0;\n}",
+    "cases": [
+      { "input": ["abc"], "expected": 1, "hidden": false },
+      { "input": ["Ab3!"], "expected": 4, "hidden": false },
+      { "input": [""], "expected": 0, "hidden": false },
+      { "input": ["CODE2026"], "expected": 2, "hidden": true },
+      { "input": ["aAaaaa"], "expected": 2, "hidden": true }
+    ]
+  },
+  {
+    "slug": "min-max-sum",
+    "title": "Min Max Sum",
+    "difficulty": "easy",
+    "tags": ["array", "math"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 140,
+    "speed_score": 10,
+    "statement": "Return the sum of the minimum and maximum values in the array. Return 0 for an empty array.",
+    "starter_code_js": "function solve(nums) {\n  // return min + max\n  return 0;\n}",
+    "cases": [
+      { "input": [[3, 1, 8]], "expected": 9, "hidden": false },
+      { "input": [[5]], "expected": 10, "hidden": false },
+      { "input": [[]], "expected": 0, "hidden": false },
+      { "input": [[-4, 2, 9, -1]], "expected": 5, "hidden": true },
+      { "input": [[0, 0, 0]], "expected": 0, "hidden": true }
+    ]
+  },
+  {
+    "slug": "row-sums",
+    "title": "Row Sums",
+    "difficulty": "easy",
+    "tags": ["matrix", "array"],
+    "concept_group": "matrix",
+    "estimated_seconds": 170,
+    "speed_score": 9,
+    "statement": "Return an array containing the sum of each matrix row.",
+    "starter_code_js": "function solve(matrix) {\n  // return row sums\n  return [];\n}",
+    "cases": [
+      { "input": [[[1, 2], [3, 4]]], "expected": [3, 7], "hidden": false },
+      { "input": [[[]]], "expected": [0], "hidden": false },
+      { "input": [[]], "expected": [], "hidden": false },
+      { "input": [[[5], [-2], [0]]], "expected": [5, -2, 0], "hidden": true },
+      { "input": [[[1, 1, 1], [2, 2, 2]]], "expected": [3, 6], "hidden": true }
+    ]
+  },
+  {
+    "slug": "first-longest-word",
+    "title": "First Longest Word",
+    "difficulty": "easy",
+    "tags": ["string", "array"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 160,
+    "speed_score": 9,
+    "statement": "Return the first word with the maximum length. Return an empty string when the list is empty.",
+    "starter_code_js": "function solve(words) {\n  // return first longest word\n  return \"\";\n}",
+    "cases": [
+      { "input": [["go", "code", "arena"]], "expected": "arena", "hidden": false },
+      { "input": [["aa", "bb", "c"]], "expected": "aa", "hidden": false },
+      { "input": [[]], "expected": "", "hidden": false },
+      { "input": [["build", "ship", "learn"]], "expected": "build", "hidden": true },
+      { "input": [["x", "yyyy", "zz"]], "expected": "yyyy", "hidden": true }
+    ]
+  },
+  {
+    "slug": "neighbor-gap-count",
+    "title": "Neighbor Gap Count",
+    "difficulty": "easy",
+    "tags": ["array", "math"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 180,
+    "speed_score": 8,
+    "statement": "Return how many neighboring pairs have an absolute difference less than or equal to limit.",
+    "starter_code_js": "function solve(nums, limit) {\n  // return pair count\n  return 0;\n}",
+    "cases": [
+      { "input": [[1, 3, 10, 12], 2], "expected": 2, "hidden": false },
+      { "input": [[5, 1], 3], "expected": 0, "hidden": false },
+      { "input": [[7], 1], "expected": 0, "hidden": false },
+      { "input": [[0, 0, 1, 4, 6], 2], "expected": 3, "hidden": true },
+      { "input": [[9, 4, 4, 5], 0], "expected": 1, "hidden": true }
+    ]
+  },
+  {
+    "slug": "subarray-target-count",
+    "title": "Subarray Target Count",
+    "difficulty": "medium",
+    "tags": ["prefix", "hash-map"],
+    "concept_group": "prefix_sum",
+    "estimated_seconds": 520,
+    "speed_score": 5,
+    "statement": "Return how many contiguous subarrays have sum equal to target.",
+    "starter_code_js": "function solve(nums, target) {\n  // return count of target-sum subarrays\n  return 0;\n}",
+    "cases": [
+      { "input": [[1, 1, 1], 2], "expected": 2, "hidden": false },
+      { "input": [[1, -1, 1], 1], "expected": 3, "hidden": false },
+      { "input": [[], 0], "expected": 0, "hidden": false },
+      { "input": [[0, 0, 0], 0], "expected": 6, "hidden": true },
+      { "input": [[3, 4, 7, -7, 1], 7], "expected": 4, "hidden": true }
+    ]
+  },
+  {
+    "slug": "window-average-threshold",
+    "title": "Window Average Threshold",
+    "difficulty": "medium",
+    "tags": ["sliding-window", "array"],
+    "concept_group": "sliding_window",
+    "estimated_seconds": 430,
+    "speed_score": 6,
+    "statement": "Given nums, window size k and threshold, return how many length-k windows have average at least threshold.",
+    "starter_code_js": "function solve(nums, k, threshold) {\n  // return qualifying window count\n  return 0;\n}",
+    "cases": [
+      { "input": [[2, 2, 2, 2], 2, 2], "expected": 3, "hidden": false },
+      { "input": [[1, 5, 1, 5], 2, 3], "expected": 3, "hidden": false },
+      { "input": [[1, 2], 3, 1], "expected": 0, "hidden": false },
+      { "input": [[10, 0, 10, 0, 10], 3, 6], "expected": 3, "hidden": true },
+      { "input": [[4, 4, 1, 1, 8], 2, 4], "expected": 2, "hidden": true }
+    ]
+  },
+  {
+    "slug": "decode-runs",
+    "title": "Decode Runs",
+    "difficulty": "medium",
+    "tags": ["string", "parsing"],
+    "concept_group": "string_parse",
+    "estimated_seconds": 420,
+    "speed_score": 6,
+    "statement": "Decode a run-length string where each letter is followed by a positive single-digit count.",
+    "starter_code_js": "function solve(encoded) {\n  // return decoded string\n  return \"\";\n}",
+    "cases": [
+      { "input": ["a3b2"], "expected": "aaabb", "hidden": false },
+      { "input": ["x1"], "expected": "x", "hidden": false },
+      { "input": [""], "expected": "", "hidden": false },
+      { "input": ["z4a1"], "expected": "zzzza", "hidden": true },
+      { "input": ["c2o1d1e1"], "expected": "ccode", "hidden": true }
+    ]
+  },
+  {
+    "slug": "column-peak",
+    "title": "Column Peak",
+    "difficulty": "medium",
+    "tags": ["matrix", "array"],
+    "concept_group": "matrix",
+    "estimated_seconds": 430,
+    "speed_score": 6,
+    "statement": "Return the maximum value from each matrix column. The matrix is non-empty and rectangular.",
+    "starter_code_js": "function solve(matrix) {\n  // return column maximums\n  return [];\n}",
+    "cases": [
+      { "input": [[[1, 5], [3, 2]]], "expected": [3, 5], "hidden": false },
+      { "input": [[[7, 8, 9]]], "expected": [7, 8, 9], "hidden": false },
+      { "input": [[[1], [4], [2]]], "expected": [4], "hidden": false },
+      { "input": [[[-1, -5], [-3, -2]]], "expected": [-1, -2], "hidden": true },
+      { "input": [[[0, 2, 1], [5, 1, 9], [3, 8, 4]]], "expected": [5, 8, 9], "hidden": true }
+    ]
+  },
+  {
+    "slug": "ticket-queue-time",
+    "title": "Ticket Queue Time",
+    "difficulty": "medium",
+    "tags": ["queue", "simulation"],
+    "concept_group": "simulation",
+    "estimated_seconds": 460,
+    "speed_score": 5,
+    "statement": "People buy one ticket per turn from left to right. Given ticket counts and an index k, return how many turns pass until person k finishes.",
+    "starter_code_js": "function solve(tickets, k) {\n  // return turns until k finishes\n  return 0;\n}",
+    "cases": [
+      { "input": [[2, 3, 2], 2], "expected": 6, "hidden": false },
+      { "input": [[5, 1, 1], 1], "expected": 2, "hidden": false },
+      { "input": [[1], 0], "expected": 1, "hidden": false },
+      { "input": [[3, 3, 3], 0], "expected": 7, "hidden": true },
+      { "input": [[1, 2, 5, 2], 2], "expected": 10, "hidden": true }
+    ]
+  },
+  {
+    "slug": "nested-parentheses-score",
+    "title": "Nested Parentheses Score",
+    "difficulty": "medium",
+    "tags": ["stack", "string"],
+    "concept_group": "stack_validation",
+    "estimated_seconds": 520,
+    "speed_score": 5,
+    "statement": "Score balanced parentheses: () is 1, AB is A+B, and (A) is 2*A.",
+    "starter_code_js": "function solve(s) {\n  // return parentheses score\n  return 0;\n}",
+    "cases": [
+      { "input": ["()"], "expected": 1, "hidden": false },
+      { "input": ["(())"], "expected": 2, "hidden": false },
+      { "input": ["()()"], "expected": 2, "hidden": false },
+      { "input": ["(()(()))"], "expected": 6, "hidden": true },
+      { "input": ["((()))"], "expected": 4, "hidden": true }
+    ]
+  },
+  {
+    "slug": "unique-paths-lite",
+    "title": "Unique Paths Lite",
+    "difficulty": "medium",
+    "tags": ["dp", "grid"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 470,
+    "speed_score": 5,
+    "statement": "Given rows and cols, count paths from top-left to bottom-right moving only right or down.",
+    "starter_code_js": "function solve(rows, cols) {\n  // return path count\n  return 0;\n}",
+    "cases": [
+      { "input": [2, 2], "expected": 2, "hidden": false },
+      { "input": [3, 3], "expected": 6, "hidden": false },
+      { "input": [1, 5], "expected": 1, "hidden": false },
+      { "input": [3, 4], "expected": 10, "hidden": true },
+      { "input": [4, 4], "expected": 20, "hidden": true }
+    ]
+  },
+  {
+    "slug": "longest-balanced-ab",
+    "title": "Longest Balanced AB",
+    "difficulty": "medium",
+    "tags": ["prefix", "hash-map", "string"],
+    "concept_group": "prefix_sum",
+    "estimated_seconds": 540,
+    "speed_score": 5,
+    "statement": "Given a string containing only a and b, return the length of the longest substring with the same number of a and b.",
+    "starter_code_js": "function solve(s) {\n  // return longest balanced length\n  return 0;\n}",
+    "cases": [
+      { "input": ["abba"], "expected": 4, "hidden": false },
+      { "input": ["aaa"], "expected": 0, "hidden": false },
+      { "input": [""], "expected": 0, "hidden": false },
+      { "input": ["aababb"], "expected": 6, "hidden": true },
+      { "input": ["bbaaaabb"], "expected": 8, "hidden": true }
+    ]
+  },
+  {
+    "slug": "dependency-order-lite",
+    "title": "Dependency Order Lite",
+    "difficulty": "medium",
+    "tags": ["graph", "topological-sort"],
+    "concept_group": "graphs",
+    "estimated_seconds": 580,
+    "speed_score": 4,
+    "statement": "Given n tasks and prerequisite pairs [before, after], return one valid order using the smallest available task first. Return [] if impossible.",
+    "starter_code_js": "function solve(n, prerequisites) {\n  // return task order\n  return [];\n}",
+    "cases": [
+      { "input": [3, [[0, 2], [1, 2]]], "expected": [0, 1, 2], "hidden": false },
+      { "input": [2, [[0, 1], [1, 0]]], "expected": [], "hidden": false },
+      { "input": [1, []], "expected": [0], "hidden": false },
+      { "input": [4, [[0, 1], [0, 2], [2, 3]]], "expected": [0, 1, 2, 3], "hidden": true },
+      { "input": [5, [[1, 3], [0, 3], [3, 4]]], "expected": [0, 1, 2, 3, 4], "hidden": true }
+    ]
+  },
+  {
+    "slug": "range-add-final",
+    "title": "Range Add Final",
+    "difficulty": "medium",
+    "tags": ["prefix", "array"],
+    "concept_group": "difference_array",
+    "estimated_seconds": 520,
+    "speed_score": 5,
+    "statement": "Start with an array of n zeros. Each operation [l,r,x] adds x to every index from l to r inclusive. Return the final array.",
+    "starter_code_js": "function solve(n, operations) {\n  // return final array\n  return [];\n}",
+    "cases": [
+      { "input": [5, [[1, 3, 2]]], "expected": [0, 2, 2, 2, 0], "hidden": false },
+      { "input": [3, []], "expected": [0, 0, 0], "hidden": false },
+      { "input": [4, [[0, 1, 1], [1, 3, 2]]], "expected": [1, 3, 2, 2], "hidden": false },
+      { "input": [5, [[0, 4, 1], [2, 2, 5]]], "expected": [1, 1, 6, 1, 1], "hidden": true },
+      { "input": [2, [[0, 0, -1], [0, 1, 3]]], "expected": [2, 3], "hidden": true }
+    ]
+  },
+  {
+    "slug": "coin-change-min",
+    "title": "Coin Change Min",
+    "difficulty": "hard",
+    "tags": ["dp"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 760,
+    "speed_score": 4,
+    "statement": "Given coin values and an amount, return the minimum number of coins needed. Return -1 if impossible.",
+    "starter_code_js": "function solve(coins, amount) {\n  // return minimum coin count\n  return -1;\n}",
+    "cases": [
+      { "input": [[1, 2, 5], 11], "expected": 3, "hidden": false },
+      { "input": [[2], 3], "expected": -1, "hidden": false },
+      { "input": [[1], 0], "expected": 0, "hidden": false },
+      { "input": [[2, 4, 6], 8], "expected": 2, "hidden": true },
+      { "input": [[3, 7, 10], 14], "expected": 2, "hidden": true }
+    ]
+  },
+  {
+    "slug": "lis-length",
+    "title": "LIS Length",
+    "difficulty": "hard",
+    "tags": ["dp", "binary-search"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 780,
+    "speed_score": 4,
+    "statement": "Return the length of the longest strictly increasing subsequence.",
+    "starter_code_js": "function solve(nums) {\n  // return LIS length\n  return 0;\n}",
+    "cases": [
+      { "input": [[10, 9, 2, 5, 3, 7, 101, 18]], "expected": 4, "hidden": false },
+      { "input": [[1, 2, 3]], "expected": 3, "hidden": false },
+      { "input": [[]], "expected": 0, "hidden": false },
+      { "input": [[3, 3, 3]], "expected": 1, "hidden": true },
+      { "input": [[4, 10, 4, 3, 8, 9]], "expected": 3, "hidden": true }
+    ]
+  },
+  {
+    "slug": "network-delay-lite",
+    "title": "Network Delay Lite",
+    "difficulty": "hard",
+    "tags": ["graph", "shortest_path"],
+    "concept_group": "graphs",
+    "estimated_seconds": 820,
+    "speed_score": 3,
+    "statement": "Given n nodes, directed edges [from,to,time] and a start node, return the time until all nodes receive the signal. Return -1 if some node is unreachable.",
+    "starter_code_js": "function solve(n, edges, start) {\n  // return network delay\n  return -1;\n}",
+    "cases": [
+      { "input": [3, [[0, 1, 2], [1, 2, 3]], 0], "expected": 5, "hidden": false },
+      { "input": [2, [[0, 1, 1]], 1], "expected": -1, "hidden": false },
+      { "input": [1, [], 0], "expected": 0, "hidden": false },
+      { "input": [4, [[0, 1, 1], [0, 2, 4], [1, 2, 2], [2, 3, 1]], 0], "expected": 4, "hidden": true },
+      { "input": [3, [[0, 1, 5], [0, 2, 2], [2, 1, 1]], 0], "expected": 3, "hidden": true }
+    ]
+  },
+  {
+    "slug": "palindrome-cuts",
+    "title": "Palindrome Cuts",
+    "difficulty": "hard",
+    "tags": ["dp", "string"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 840,
+    "speed_score": 3,
+    "statement": "Return the minimum number of cuts needed so every resulting substring is a palindrome.",
+    "starter_code_js": "function solve(s) {\n  // return minimum cuts\n  return 0;\n}",
+    "cases": [
+      { "input": ["aab"], "expected": 1, "hidden": false },
+      { "input": ["a"], "expected": 0, "hidden": false },
+      { "input": ["ab"], "expected": 1, "hidden": false },
+      { "input": ["racecar"], "expected": 0, "hidden": true },
+      { "input": ["abcbm"], "expected": 2, "hidden": true }
+    ]
+  },
+  {
+    "slug": "regex-dot-star-lite",
+    "title": "Regex Dot Star Lite",
+    "difficulty": "hard",
+    "tags": ["dp", "string"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 900,
+    "speed_score": 3,
+    "statement": "Return true if the full text matches a pattern containing lowercase letters, dot as any single character and star as zero or more of the previous token.",
+    "starter_code_js": "function solve(text, pattern) {\n  // return full match boolean\n  return false;\n}",
+    "cases": [
+      { "input": ["aa", "a"], "expected": false, "hidden": false },
+      { "input": ["aa", "a*"], "expected": true, "hidden": false },
+      { "input": ["ab", ".*"], "expected": true, "hidden": false },
+      { "input": ["aab", "c*a*b"], "expected": true, "hidden": true },
+      { "input": ["miss", "mis*"], "expected": false, "hidden": true }
+    ]
+  },
+  {
+    "slug": "max-square-area",
+    "title": "Max Square Area",
+    "difficulty": "hard",
+    "tags": ["dp", "matrix"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 800,
+    "speed_score": 4,
+    "statement": "Given a binary matrix, return the area of the largest square containing only 1 values.",
+    "starter_code_js": "function solve(matrix) {\n  // return largest square area\n  return 0;\n}",
+    "cases": [
+      { "input": [[[1, 0], [1, 1]]], "expected": 1, "hidden": false },
+      { "input": [[[1, 1], [1, 1]]], "expected": 4, "hidden": false },
+      { "input": [[[0, 0]]], "expected": 0, "hidden": false },
+      { "input": [[[1, 1, 1], [1, 1, 1], [0, 1, 1]]], "expected": 4, "hidden": true },
+      { "input": [[[1, 1, 1, 1]]], "expected": 1, "hidden": true }
+    ]
+  },
+  {
+    "slug": "min-cost-stairs-plus",
+    "title": "Min Cost Stairs Plus",
+    "difficulty": "hard",
+    "tags": ["dp"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 740,
+    "speed_score": 4,
+    "statement": "Each index has a cost. You may start at index 0 or 1 and climb 1 or 2 steps. Return the minimum cost to move past the last index.",
+    "starter_code_js": "function solve(cost) {\n  // return minimum climbing cost\n  return 0;\n}",
+    "cases": [
+      { "input": [[10, 15, 20]], "expected": 15, "hidden": false },
+      { "input": [[1, 100, 1, 1, 1, 100, 1, 1, 100, 1]], "expected": 6, "hidden": false },
+      { "input": [[5, 6]], "expected": 5, "hidden": false },
+      { "input": [[0, 0, 1, 0]], "expected": 0, "hidden": true },
+      { "input": [[3, 2, 4, 1, 2]], "expected": 5, "hidden": true }
+    ]
+  },
+  {
+    "slug": "word-break-lite",
+    "title": "Word Break Lite",
+    "difficulty": "hard",
+    "tags": ["dp", "string", "set"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 780,
+    "speed_score": 4,
+    "statement": "Return true if the string can be split into one or more words from the dictionary.",
+    "starter_code_js": "function solve(s, words) {\n  // return whether s can be segmented\n  return false;\n}",
+    "cases": [
+      { "input": ["leetcode", ["leet", "code"]], "expected": true, "hidden": false },
+      { "input": ["applepenapple", ["apple", "pen"]], "expected": true, "hidden": false },
+      { "input": ["catsandog", ["cats", "dog", "sand", "and", "cat"]], "expected": false, "hidden": false },
+      { "input": ["aaaaaaa", ["aaaa", "aaa"]], "expected": true, "hidden": true },
+      { "input": ["blitzcode", ["blitz", "cod", "code"]], "expected": true, "hidden": true }
+    ]
   }
 ]

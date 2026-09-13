@@ -52,7 +52,7 @@ See `blitzcode-mvp/backend/README.md`.
 
 Seed files:
 
-- `db/seed_problems.json` - 71 starter tasks;
+- `db/seed_problems.json` - 100 starter tasks;
 - `db/seed_courses.json` - one free platform intro course.
 
 Schema overview:

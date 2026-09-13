@@ -5,7 +5,7 @@ This folder contains the first database design for Code Blitz.
 ## Files
 
 - `schema.sql` - PostgreSQL database structure.
-- `seed_problems.json` - original problem library seed with 71 tasks.
+- `seed_problems.json` - original problem library seed with 100 tasks.
 - `seed_courses.json` - learning course catalog seed with free and premium tracks.
 
 ## Main Tables

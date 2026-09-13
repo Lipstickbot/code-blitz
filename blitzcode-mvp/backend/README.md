@@ -190,7 +190,7 @@ Backend работает по SQLAlchemy-моделям и Alembic-миграц�
 - матч можно закрыть серверно через `POST /api/matches/{id}/finish`, а истечение времени тоже завершает матч и считает рейтинг;
 - игрок может сдаться через `POST /api/matches/{id}/forfeit`: соперник становится победителем, рейтинг считается, событие уходит в WebSocket;
 - добавлены database integration tests для matchmaking: очередь, рейтинг-окно, создание матча и восстановление active match;
-- `seed.py` теперь берет 71 задачу из `../../db/seed_problems.json`;
+- `seed.py` теперь берет 100 задач из `../../db/seed_problems.json`;
 - добавлен Alembic: первая миграция лежит в `migrations/versions/20260825_0001_initial_schema.py`;
 - добавлена миграция индексов `migrations/versions/20260828_0002_query_indexes.py`;
 - production startup validation не дает запустить API с дефолтным JWT secret или `AUTO_CREATE_TABLES=true`;
