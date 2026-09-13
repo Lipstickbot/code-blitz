@@ -5,7 +5,7 @@
 - Static frontend prototype with dark/light arena UI.
 - Auth endpoints: register, login, current user.
 - Rating is stored in `user_stats` and shown only for authenticated users.
-- Problem bank seed with 50 starter tasks.
+- Problem bank seed with 71 starter tasks.
 - Admin problem CRUD and separate test case management.
 - Real Python and JavaScript judge contract through `solve(...)`.
 - `Run` uses up to 5 sample tests.
@@ -52,7 +52,7 @@
 - Course detail panel and lesson completion progress tracking for enrolled free courses.
 - Course practice problem links so lessons can send users into real task practice.
 - TypeScript TS-light backend judge support for LeetCode-style `solve(...)` functions.
-- Expanded original problem library to 50 tasks with broader tags and difficulty spread.
+- Expanded original problem library to 71 tasks with broader tags and difficulty spread.
 - Admin problem calibration API and UI using submission acceptance rate and runtime signals.
 - Admin editorial review UI for approving, commenting and requesting changes on tasks.
 - Admin solution notes editing for task editorials, intended approach and edge cases.
