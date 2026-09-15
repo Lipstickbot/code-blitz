@@ -1060,6 +1060,7 @@ const els = {
   tournamentBracketPanel: document.querySelector("#tournamentBracketPanel"),
   tournamentBracketTitle: document.querySelector("#tournamentBracketTitle"),
   tournamentBracketStatus: document.querySelector("#tournamentBracketStatus"),
+  tournamentCopyLink: document.querySelector("#tournamentCopyLink"),
   tournamentChampion: document.querySelector("#tournamentChampion"),
   tournamentSeeds: document.querySelector("#tournamentSeeds"),
   tournamentRounds: document.querySelector("#tournamentRounds"),
@@ -1363,7 +1364,7 @@ async function loadSeedProblems() {
   }
 }
 
-function showView(view) {
+function showView(view, options = {}) {
   Object.entries(els.views).forEach(([name, element]) => {
     element.classList.toggle("active", name === view);
   });
@@ -1373,8 +1374,10 @@ function showView(view) {
   if (view === "history") loadMatchHistory();
   if (view === "learn") loadCourses();
   if (view === "contests") {
-    loadTournaments();
-    startTournamentPolling();
+    if (!options.skipLoad) {
+      loadTournaments();
+      startTournamentPolling();
+    }
   } else {
     stopTournamentPolling();
   }
@@ -1917,6 +1920,45 @@ function setTournamentTargetSize(size) {
   updateTournamentPlayerHint();
 }
 
+function buildTournamentSpectatorLink(tournamentId = state.selectedTournamentId) {
+  if (!tournamentId) return "";
+  const url = new URL(window.location.href);
+  url.pathname = url.pathname.endsWith("/") ? `${url.pathname}index.html` : url.pathname;
+  url.searchParams.set("tournament", tournamentId);
+  url.searchParams.delete("room");
+  return url.toString();
+}
+
+function writeTournamentLinkToUrl(tournamentId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tournament", tournamentId);
+  url.searchParams.delete("room");
+  window.history.replaceState({}, "", url);
+}
+
+async function copyCurrentTournamentLink() {
+  clearApiError();
+  const link = buildTournamentSpectatorLink();
+  if (!link) {
+    if (els.tournamentStatus) els.tournamentStatus.textContent = "select cup first";
+    return;
+  }
+
+  try {
+    await copyTextToClipboard(link);
+    if (els.tournamentStatus) els.tournamentStatus.textContent = "spectator link copied";
+    if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = "share link ready";
+    els.terminal.textContent = `> tournament spectator\n${link}`;
+    setConsoleTab("terminal");
+  } catch (error) {
+    showApiError(new ApiError("Could not copy tournament link.", {
+      status: 400,
+      detail: error.message || "Could not copy tournament link.",
+      kind: "request",
+    }), "copy tournament link");
+  }
+}
+
 function formatTournamentDate(value) {
   if (!value) return "not started";
   return new Intl.DateTimeFormat("en", {
@@ -1971,6 +2013,7 @@ function selectTournament(tournamentId, rerenderList = true) {
   const tournament = state.tournaments.find((item) => item.id === tournamentId);
   if (rerenderList) renderTournaments();
   renderTournamentBracket(tournament);
+  writeTournamentLinkToUrl(tournamentId);
   connectTournamentStream(tournamentId);
 }
 
@@ -2039,7 +2082,7 @@ function renderTournamentMatch(match) {
       ? "left"
       : "right"
     : "";
-  const canEnter = match.match_id && match.status === "active";
+  const canEnter = localStorage.getItem(AUTH_TOKEN_KEY) && match.match_id && match.status === "active";
   return `
     <article class="bracket-match ${escapeHtml(match.status)}">
       <span>Match ${String(match.bracket_position).padStart(2, "0")} · ${escapeHtml(match.status)}</span>
@@ -2081,6 +2124,26 @@ async function loadTournaments(options = {}) {
       renderTournamentEmpty(error.detail || "Could not load tournaments.");
     }
     if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = error.kind === "offline" ? "backend offline" : "refresh failed";
+  }
+}
+
+async function loadPublicTournament(tournamentId) {
+  if (!tournamentId || !els.tournamentList) return;
+  if (els.tournamentStatus) els.tournamentStatus.textContent = "loading spectator";
+  try {
+    const tournament = await apiRequest(`/api/tournaments/${encodeURIComponent(tournamentId)}/public`);
+    state.tournaments = [tournament, ...state.tournaments.filter((item) => item.id !== tournament.id)];
+    state.selectedTournamentId = tournament.id;
+    renderTournaments(state.tournaments);
+    renderTournamentBracket(tournament);
+    if (els.tournamentStatus) els.tournamentStatus.textContent = "spectator view";
+    if (els.tournamentLiveStatus) {
+      els.tournamentLiveStatus.textContent = localStorage.getItem(AUTH_TOKEN_KEY) ? "socket ready" : "public read-only";
+    }
+  } catch (error) {
+    const details = describeApiError(error, "open tournament spectator");
+    if (els.tournamentStatus) els.tournamentStatus.textContent = details.status;
+    renderTournamentEmpty(details.terminal.join(" "));
   }
 }
 
@@ -2178,6 +2241,7 @@ async function createTournamentFromForm() {
     });
     state.tournaments = [tournament, ...state.tournaments.filter((item) => item.id !== tournament.id)];
     state.selectedTournamentId = tournament.id;
+    writeTournamentLinkToUrl(tournament.id);
     els.tournamentStatus.textContent = "bracket ready";
     renderTournaments();
     renderTournamentBracket(tournament);
@@ -3842,6 +3906,22 @@ function buildRoomLink(roomId = state.currentRoomId) {
   return url.toString();
 }
 
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const helper = document.createElement("textarea");
+  helper.value = text;
+  helper.setAttribute("readonly", "");
+  helper.style.position = "fixed";
+  helper.style.left = "-9999px";
+  document.body.appendChild(helper);
+  helper.select();
+  document.execCommand("copy");
+  helper.remove();
+}
+
 function writeRoomLinkToUrl(roomId) {
   const url = new URL(window.location.href);
   url.searchParams.set("room", roomId);
@@ -3864,19 +3944,7 @@ async function copyCurrentRoomLink() {
   }
 
   try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(link);
-    } else {
-      const helper = document.createElement("textarea");
-      helper.value = link;
-      helper.setAttribute("readonly", "");
-      helper.style.position = "fixed";
-      helper.style.left = "-9999px";
-      document.body.appendChild(helper);
-      helper.select();
-      document.execCommand("copy");
-      helper.remove();
-    }
+    await copyTextToClipboard(link);
     els.roomStatus.textContent = "room link copied";
     els.terminal.textContent = `> friend room\n${link}`;
     setConsoleTab("terminal");
@@ -4084,6 +4152,13 @@ async function handleRoomLinkFromUrl() {
   } catch (error) {
     showApiError(error, "open friend room");
   }
+}
+
+async function handleTournamentLinkFromUrl() {
+  const tournamentId = new URL(window.location.href).searchParams.get("tournament");
+  if (!tournamentId) return;
+  showView("contests", { skipLoad: true });
+  await loadPublicTournament(tournamentId);
 }
 
 async function acceptRoomInvite(roomId) {
@@ -4575,6 +4650,7 @@ els.authForm.addEventListener("submit", handleAuth);
 els.historyRefresh.addEventListener("click", loadMatchHistory);
 if (els.tournamentRefresh) els.tournamentRefresh.addEventListener("click", loadTournaments);
 if (els.tournamentCreate) els.tournamentCreate.addEventListener("click", createTournamentFromForm);
+if (els.tournamentCopyLink) els.tournamentCopyLink.addEventListener("click", copyCurrentTournamentLink);
 if (els.tournamentPlayers) els.tournamentPlayers.addEventListener("input", updateTournamentPlayerHint);
 els.tournamentSizeButtons.forEach((button) => {
   button.addEventListener("click", () => setTournamentTargetSize(button.dataset.tournamentSize));
@@ -4602,6 +4678,7 @@ async function initApp() {
   renderProblem();
   renderTimer();
   resetArenaLobby();
+  await handleTournamentLinkFromUrl();
   await handleRoomLinkFromUrl();
 }
 

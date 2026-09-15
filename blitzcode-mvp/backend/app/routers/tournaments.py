@@ -74,6 +74,17 @@ async def tournament_spectate(
     return await tournament_out(db, tournament)
 
 
+@router.get("/{tournament_id}/public", response_model=TournamentOut)
+async def public_tournament_spectate(
+    tournament_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    tournament = await db.get(Tournament, tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return await tournament_out(db, tournament)
+
+
 @router.websocket("/{tournament_id}/stream")
 async def stream_tournament(tournament_id: str, websocket: WebSocket, token: str | None = None):
     async for db in get_db():

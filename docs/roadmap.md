@@ -67,18 +67,19 @@
 - Tournament WebSocket stream for bracket update events when winners advance.
 - Tournament spectator API and admin backend controls for listing/canceling tournament rooms.
 - Admin tournament monitor UI with active room counts and cancel action.
+- Public/shareable tournament spectator links with read-only bracket loading.
 - Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
-- Add public/shareable tournament spectator links.
+- Add richer tournament admin audit logs.
 
 ## Later
 
 - OAuth login with Google/GitHub after local auth is stable.
 - Friend-room polish: WebSocket invite notifications and rematch flow.
-- Tournament polish: public/shareable spectator links and richer tournament admin audit logs.
+- Tournament polish: richer tournament admin audit logs.
 - Learning polish: more courses later, stronger recommendation signals and premium checkout integration if paid tracks return.
 - Typed adapter contract for compiled language judging: C++, Java, Go, Rust.

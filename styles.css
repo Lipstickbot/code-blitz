@@ -2448,6 +2448,19 @@ main::after {
   margin-top: 18px;
 }
 
+.tournament-bracket-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tournament-bracket-actions .primary-button {
+  min-height: 36px;
+  padding: 0 14px;
+}
+
 .tournament-bracket-panel.finished {
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.13), transparent 10rem),
