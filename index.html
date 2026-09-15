@@ -96,7 +96,7 @@
             </article>
             <article>
               <span class="panel-kicker">TASK BANK</span>
-              <strong>50 launch tasks</strong>
+              <strong>100 launch tasks</strong>
               <small>arrays, strings, graphs, DP, search, and debugging</small>
             </article>
           </section>
@@ -305,28 +305,50 @@
         </section>
 
         <section class="view simple-view contests-view" id="contestsView">
-          <h1>Contests</h1>
-          <p>Separate tournament window for scheduled blitz events, ladders, and ranked cups.</p>
-          <div class="contests-grid">
-            <article class="contest-card live">
-              <span>LIVE // 03:00</span>
-              <strong>Night Sprint Cup</strong>
-              <small>6 random tasks · ranked · 128 pilots</small>
-              <button data-open-mode="players">Enter Arena</button>
-            </article>
-            <article class="contest-card">
-              <span>QUEUE</span>
-              <strong>Online Matchmaking</strong>
-              <small>Next step: connect real users through backend rooms and live progress.</small>
-              <button data-open-mode="players">Find Match</button>
-            </article>
-            <article class="contest-card">
-              <span>RANKED</span>
-              <strong>Blitz Ladder</strong>
-              <small>Ratings, fair task sets, and match history will use the new database schema.</small>
-              <button data-open-mode="players">Open Arena</button>
-            </article>
+          <div class="admin-head">
+            <div>
+              <span class="panel-kicker">// TOURNAMENT CONTROL</span>
+              <h1>Contests</h1>
+            </div>
+            <button class="primary-button" id="tournamentRefresh" type="button">Refresh</button>
           </div>
+          <p>Create a 2, 4, 8, 16, or 32 player coding cup. Players are seeded by rating and the bracket is built from the first round through the final.</p>
+
+          <section class="tournament-layout">
+            <article class="tournament-create">
+              <div class="battle-head">
+                <h2>Create Tournament</h2>
+                <span id="tournamentStatus">login required</span>
+              </div>
+              <label>
+                <span>Name</span>
+                <input id="tournamentName" type="text" value="Night Sprint Cup" maxlength="120" />
+              </label>
+              <label>
+                <span>Players by login</span>
+                <textarea id="tournamentPlayers" rows="8" spellcheck="false" placeholder="friend_one&#10;friend_two&#10;friend_three"></textarea>
+              </label>
+              <small>Creator is added automatically. Add 1, 3, 7, 15, or 31 other players.</small>
+              <button class="primary-button" id="tournamentCreate" type="button">Create Bracket</button>
+            </article>
+
+            <article class="tournament-list-panel">
+              <div class="battle-head">
+                <h2>Your Cups</h2>
+                <span id="tournamentCount">0 loaded</span>
+              </div>
+              <div class="tournament-list" id="tournamentList"></div>
+            </article>
+          </section>
+
+          <section class="tournament-bracket-panel hidden" id="tournamentBracketPanel">
+            <div class="battle-head">
+              <h2 id="tournamentBracketTitle">Bracket</h2>
+              <span id="tournamentBracketStatus">select cup</span>
+            </div>
+            <div class="tournament-seeds" id="tournamentSeeds"></div>
+            <div class="tournament-rounds" id="tournamentRounds"></div>
+          </section>
         </section>
 
         <section class="view simple-view history-view" id="historyView">

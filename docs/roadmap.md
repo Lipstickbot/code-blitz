@@ -62,13 +62,14 @@
 - Richer lesson content seed with theory text, checklist items and database fields.
 - Tournament backend foundation: 2/4/8/16/32-player rooms, bracket rounds, automatic winner advance and final champion.
 - Tournament bracket output now includes grouped rounds and rating-seeded first-round pairings through the final.
+- Tournament frontend room: create cups by login list, view seeds, grouped bracket rounds and enter active matches.
 - Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
-- Add tournament room UI: invite list, bracket view, current round and champion screen.
+- Polish tournament UI with live refresh, champion celebration and invite shortcuts.
 
 ## Later
 

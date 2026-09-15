@@ -943,6 +943,8 @@ const state = {
   adminCalibration: [],
   adminEditingProblemId: null,
   historyMatches: [],
+  tournaments: [],
+  selectedTournamentId: null,
   courses: [],
   courseRecommendations: [],
   courseFilter: "all",
@@ -1040,6 +1042,18 @@ const els = {
   replaySummary: document.querySelector("#replaySummary"),
   replayTasks: document.querySelector("#replayTasks"),
   replayEvents: document.querySelector("#replayEvents"),
+  tournamentRefresh: document.querySelector("#tournamentRefresh"),
+  tournamentCreate: document.querySelector("#tournamentCreate"),
+  tournamentName: document.querySelector("#tournamentName"),
+  tournamentPlayers: document.querySelector("#tournamentPlayers"),
+  tournamentStatus: document.querySelector("#tournamentStatus"),
+  tournamentCount: document.querySelector("#tournamentCount"),
+  tournamentList: document.querySelector("#tournamentList"),
+  tournamentBracketPanel: document.querySelector("#tournamentBracketPanel"),
+  tournamentBracketTitle: document.querySelector("#tournamentBracketTitle"),
+  tournamentBracketStatus: document.querySelector("#tournamentBracketStatus"),
+  tournamentSeeds: document.querySelector("#tournamentSeeds"),
+  tournamentRounds: document.querySelector("#tournamentRounds"),
   adminNav: document.querySelector("#adminNav"),
   adminNew: document.querySelector("#adminNew"),
   adminRefresh: document.querySelector("#adminRefresh"),
@@ -1346,6 +1360,7 @@ function showView(view) {
   });
   if (view === "history") loadMatchHistory();
   if (view === "learn") loadCourses();
+  if (view === "contests") loadTournaments();
   if (view === "admin") loadAdminProblems();
 }
 
@@ -1839,6 +1854,232 @@ async function loadMatchReplay(matchId) {
     els.replayStatus.textContent = details.status;
     els.replayEvents.innerHTML = `<p class="admin-empty">${escapeHtml(details.terminal.join(" "))}</p>`;
   }
+}
+
+function renderTournamentEmpty(message = "Login to create and view tournaments.") {
+  if (!els.tournamentList) return;
+  els.tournamentList.innerHTML = `<p class="admin-empty">${escapeHtml(message)}</p>`;
+  if (els.tournamentCount) els.tournamentCount.textContent = "0 loaded";
+}
+
+function parseTournamentPlayers(value) {
+  return [...new Set(
+    String(value || "")
+      .split(/[\s,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+  )];
+}
+
+function formatTournamentDate(value) {
+  if (!value) return "not started";
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function renderTournaments(tournaments = state.tournaments) {
+  if (!els.tournamentList) return;
+  if (els.tournamentCount) els.tournamentCount.textContent = `${tournaments.length} loaded`;
+  if (!tournaments.length) {
+    renderTournamentEmpty("No tournaments yet. Create one with friend logins.");
+    renderTournamentBracket(null);
+    return;
+  }
+  if (!tournaments.some((item) => item.id === state.selectedTournamentId)) {
+    state.selectedTournamentId = tournaments[0].id;
+  }
+
+  els.tournamentList.innerHTML = tournaments
+    .map((tournament) => {
+      const active = tournament.id === state.selectedTournamentId ? " active" : "";
+      const champion = tournament.champion_user_id
+        ? tournament.participants?.find((item) => item.user_id === tournament.champion_user_id)?.username || "champion locked"
+        : "in progress";
+      return `
+        <button class="tournament-card${active}" data-tournament-id="${escapeHtml(tournament.id)}" type="button">
+          <span>${escapeHtml(tournament.status)} · ${tournament.player_count}/${tournament.max_players}</span>
+          <strong>${escapeHtml(tournament.name)}</strong>
+          <small>${escapeHtml(formatTournamentDate(tournament.started_at || tournament.created_at))} · ${escapeHtml(champion)}</small>
+        </button>
+      `;
+    })
+    .join("");
+
+  els.tournamentList.querySelectorAll("[data-tournament-id]").forEach((button) => {
+    button.addEventListener("click", () => selectTournament(button.dataset.tournamentId));
+  });
+
+  const selected = tournaments.find((item) => item.id === state.selectedTournamentId);
+  if (selected) renderTournamentBracket(selected);
+}
+
+function selectTournament(tournamentId, rerenderList = true) {
+  state.selectedTournamentId = tournamentId;
+  const tournament = state.tournaments.find((item) => item.id === tournamentId);
+  if (rerenderList) renderTournaments();
+  renderTournamentBracket(tournament);
+}
+
+function renderTournamentBracket(tournament) {
+  if (!els.tournamentBracketPanel || !els.tournamentRounds) return;
+  if (!tournament) {
+    els.tournamentBracketPanel.classList.add("hidden");
+    els.tournamentRounds.innerHTML = "";
+    if (els.tournamentSeeds) els.tournamentSeeds.innerHTML = "";
+    return;
+  }
+
+  els.tournamentBracketPanel.classList.remove("hidden");
+  els.tournamentBracketTitle.textContent = tournament.name;
+  const champion = tournament.champion_user_id
+    ? tournament.participants?.find((item) => item.user_id === tournament.champion_user_id)?.username || "champion"
+    : `${tournament.status} // ${tournament.player_count} players`;
+  els.tournamentBracketStatus.textContent = champion;
+
+  els.tournamentSeeds.innerHTML = (tournament.participants || [])
+    .map((participant) => `
+      <span class="seed-pill ${escapeHtml(participant.status)}">
+        #${participant.seed} ${escapeHtml(participant.username)}
+      </span>
+    `)
+    .join("");
+
+  els.tournamentRounds.innerHTML = (tournament.rounds || [])
+    .map((round) => `
+      <section class="tournament-round">
+        <div class="round-head">
+          <strong>${escapeHtml(round.name)}</strong>
+          <span>${round.match_count} match${round.match_count === 1 ? "" : "es"}</span>
+        </div>
+        <div class="round-matches">
+          ${(round.matches || []).map(renderTournamentMatch).join("")}
+        </div>
+      </section>
+    `)
+    .join("");
+
+  els.tournamentRounds.querySelectorAll("[data-tournament-match]").forEach((button) => {
+    button.addEventListener("click", () => enterTournamentMatch(button.dataset.tournamentMatch));
+  });
+}
+
+function renderTournamentMatch(match) {
+  const left = match.left_username || "TBD";
+  const right = match.right_username || "TBD";
+  const winnerSide = match.winner_participant_id
+    ? match.winner_participant_id === match.left_participant_id
+      ? "left"
+      : "right"
+    : "";
+  const canEnter = match.match_id && match.status === "active";
+  return `
+    <article class="bracket-match ${escapeHtml(match.status)}">
+      <span>Match ${String(match.bracket_position).padStart(2, "0")} · ${escapeHtml(match.status)}</span>
+      <div class="bracket-player ${winnerSide === "left" ? "winner" : ""}">
+        <b>${escapeHtml(left)}</b>
+      </div>
+      <div class="bracket-player ${winnerSide === "right" ? "winner" : ""}">
+        <b>${escapeHtml(right)}</b>
+      </div>
+      ${canEnter ? `<button class="primary-button" data-tournament-match="${escapeHtml(match.match_id)}" type="button">Enter Match</button>` : ""}
+    </article>
+  `;
+}
+
+async function loadTournaments() {
+  if (!els.tournamentList) return;
+  if (!localStorage.getItem(AUTH_TOKEN_KEY)) {
+    els.tournamentStatus.textContent = "login required";
+    renderTournamentEmpty("Login to create and view tournament rooms.");
+    return;
+  }
+
+  els.tournamentStatus.textContent = "loading";
+  try {
+    const tournaments = await apiRequest("/api/tournaments");
+    state.tournaments = tournaments;
+    els.tournamentStatus.textContent = "ready";
+    renderTournaments(tournaments);
+  } catch (error) {
+    els.tournamentStatus.textContent = error.kind === "offline" ? "backend offline" : "load failed";
+    renderTournamentEmpty(error.detail || "Could not load tournaments.");
+  }
+}
+
+async function createTournamentFromForm() {
+  if (!localStorage.getItem(AUTH_TOKEN_KEY)) {
+    els.tournamentStatus.textContent = "login required";
+    openAuth("login");
+    return;
+  }
+
+  const name = els.tournamentName.value.trim();
+  const playerUsernames = parseTournamentPlayers(els.tournamentPlayers.value);
+  if (!name || playerUsernames.length < 1) {
+    els.tournamentStatus.textContent = "add players";
+    return;
+  }
+
+  els.tournamentCreate.disabled = true;
+  els.tournamentStatus.textContent = "creating bracket";
+  try {
+    const tournament = await apiRequest("/api/tournaments", {
+      method: "POST",
+      body: JSON.stringify({ name, player_usernames: playerUsernames }),
+    });
+    state.tournaments = [tournament, ...state.tournaments.filter((item) => item.id !== tournament.id)];
+    state.selectedTournamentId = tournament.id;
+    els.tournamentStatus.textContent = "bracket ready";
+    renderTournaments();
+    renderTournamentBracket(tournament);
+  } catch (error) {
+    els.tournamentStatus.textContent = error.kind === "offline" ? "backend offline" : "create failed";
+    els.tournamentBracketPanel.classList.remove("hidden");
+    els.tournamentBracketTitle.textContent = "Tournament Error";
+    els.tournamentBracketStatus.textContent = "check players";
+    els.tournamentRounds.innerHTML = `<p class="admin-empty">${escapeHtml(error.detail || "Could not create tournament.")}</p>`;
+  } finally {
+    els.tournamentCreate.disabled = false;
+  }
+}
+
+async function enterTournamentMatch(matchId) {
+  if (!matchId) return;
+  clearInterval(state.timerId);
+  clearInterval(state.opponentId);
+  clearInterval(state.matchPollId);
+  setMode("players");
+  els.status.textContent = "joining tournament match";
+  try {
+    await loadBackendMatch(matchId);
+    connectMatchStream(matchId);
+  } catch (error) {
+    els.tournamentStatus.textContent = "match load failed";
+    return;
+  }
+
+  showView("arena");
+  state.matchRunning = true;
+  state.problemIndex = 0;
+  els.arenaView.classList.add("match-live");
+  els.opponentName.textContent = `${state.currentOpponent.name} (${state.currentOpponent.rating})`;
+  els.opponentBoardName.textContent = `${state.currentOpponent.name} // ${state.currentOpponent.rating}`;
+  els.status.textContent = `tournament match // ${state.currentOpponent.name}`;
+  els.start.textContent = "Restart";
+  els.start.disabled = false;
+  renderProblem();
+  renderTimer();
+  updateRace();
+
+  state.timerId = setInterval(async () => {
+    state.secondsLeft -= 1;
+    renderTimer();
+    if (state.secondsLeft <= 0 && state.matchRunning) await finishBackendMatch("time expired");
+  }, 1000);
 }
 
 function formatCoursePrice(course) {
@@ -4119,6 +4360,8 @@ els.authModal.addEventListener("click", (event) => {
 });
 els.authForm.addEventListener("submit", handleAuth);
 els.historyRefresh.addEventListener("click", loadMatchHistory);
+if (els.tournamentRefresh) els.tournamentRefresh.addEventListener("click", loadTournaments);
+if (els.tournamentCreate) els.tournamentCreate.addEventListener("click", createTournamentFromForm);
 els.adminNew.addEventListener("click", resetAdminForm);
 els.adminRefresh.addEventListener("click", loadAdminProblems);
 els.adminSignalsRefresh.addEventListener("click", loadAdminSignals);
