@@ -926,6 +926,8 @@ const state = {
   currentRoomId: null,
   roomWaitReject: null,
   roomInvitePollId: null,
+  tournamentPollId: null,
+  tournamentTargetSize: 4,
   currentMatchStartedAt: null,
   matchPollId: null,
   matchSocket: null,
@@ -1044,14 +1046,18 @@ const els = {
   replayEvents: document.querySelector("#replayEvents"),
   tournamentRefresh: document.querySelector("#tournamentRefresh"),
   tournamentCreate: document.querySelector("#tournamentCreate"),
+  tournamentSizeButtons: document.querySelectorAll("[data-tournament-size]"),
   tournamentName: document.querySelector("#tournamentName"),
   tournamentPlayers: document.querySelector("#tournamentPlayers"),
+  tournamentPlayerHint: document.querySelector("#tournamentPlayerHint"),
+  tournamentLiveStatus: document.querySelector("#tournamentLiveStatus"),
   tournamentStatus: document.querySelector("#tournamentStatus"),
   tournamentCount: document.querySelector("#tournamentCount"),
   tournamentList: document.querySelector("#tournamentList"),
   tournamentBracketPanel: document.querySelector("#tournamentBracketPanel"),
   tournamentBracketTitle: document.querySelector("#tournamentBracketTitle"),
   tournamentBracketStatus: document.querySelector("#tournamentBracketStatus"),
+  tournamentChampion: document.querySelector("#tournamentChampion"),
   tournamentSeeds: document.querySelector("#tournamentSeeds"),
   tournamentRounds: document.querySelector("#tournamentRounds"),
   adminNav: document.querySelector("#adminNav"),
@@ -1360,7 +1366,12 @@ function showView(view) {
   });
   if (view === "history") loadMatchHistory();
   if (view === "learn") loadCourses();
-  if (view === "contests") loadTournaments();
+  if (view === "contests") {
+    loadTournaments();
+    startTournamentPolling();
+  } else {
+    stopTournamentPolling();
+  }
   if (view === "admin") loadAdminProblems();
 }
 
@@ -1600,6 +1611,7 @@ function renderAuthState(isLoggedIn = Boolean(localStorage.getItem(AUTH_TOKEN_KE
 
 function logoutUser() {
   stopRoomInvitePolling();
+  stopTournamentPolling();
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   state.currentUser = {
@@ -1610,6 +1622,10 @@ function logoutUser() {
   };
   state.historyMatches = [];
   state.selectedReplayId = null;
+  state.tournaments = [];
+  state.selectedTournamentId = null;
+  renderTournamentEmpty("Login to create and view tournament rooms.");
+  renderTournamentBracket(null);
   renderAuthState(false);
 }
 
@@ -1871,6 +1887,30 @@ function parseTournamentPlayers(value) {
   )];
 }
 
+function getTournamentTargetPlayers() {
+  return Number(state.tournamentTargetSize || 4);
+}
+
+function updateTournamentPlayerHint() {
+  if (!els.tournamentPlayerHint) return;
+  const target = getTournamentTargetPlayers();
+  const entered = parseTournamentPlayers(els.tournamentPlayers?.value || "").length;
+  const needed = Math.max(0, target - 1 - entered);
+  els.tournamentPlayerHint.textContent = `Target ${target} players. Creator is automatic. Add ${target - 1} other login${target === 2 ? "" : "s"}; ${needed} still needed.`;
+  if (els.tournamentPlayers) {
+    els.tournamentPlayers.placeholder = Array.from({ length: Math.min(target - 1, 5) }, (_, index) => `friend_${index + 1}`).join("\n")
+      + (target > 6 ? "\n..." : "");
+  }
+  els.tournamentSizeButtons.forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.tournamentSize) === target);
+  });
+}
+
+function setTournamentTargetSize(size) {
+  state.tournamentTargetSize = Number(size) || 4;
+  updateTournamentPlayerHint();
+}
+
 function formatTournamentDate(value) {
   if (!value) return "not started";
   return new Intl.DateTimeFormat("en", {
@@ -1930,15 +1970,29 @@ function renderTournamentBracket(tournament) {
     els.tournamentBracketPanel.classList.add("hidden");
     els.tournamentRounds.innerHTML = "";
     if (els.tournamentSeeds) els.tournamentSeeds.innerHTML = "";
+    if (els.tournamentChampion) {
+      els.tournamentChampion.classList.add("hidden");
+      els.tournamentChampion.innerHTML = "";
+    }
     return;
   }
 
   els.tournamentBracketPanel.classList.remove("hidden");
+  els.tournamentBracketPanel.classList.toggle("finished", tournament.status === "finished");
   els.tournamentBracketTitle.textContent = tournament.name;
-  const champion = tournament.champion_user_id
+  const championName = tournament.champion_user_id
     ? tournament.participants?.find((item) => item.user_id === tournament.champion_user_id)?.username || "champion"
+    : "";
+  const champion = championName
+    ? `champion // ${championName}`
     : `${tournament.status} // ${tournament.player_count} players`;
   els.tournamentBracketStatus.textContent = champion;
+  if (els.tournamentChampion) {
+    els.tournamentChampion.classList.toggle("hidden", !championName);
+    els.tournamentChampion.innerHTML = championName
+      ? `<span>// FINAL LOCKED</span><strong>${escapeHtml(championName)}</strong><small>Champion of ${escapeHtml(tournament.name)}</small>`
+      : "";
+  }
 
   els.tournamentSeeds.innerHTML = (tournament.participants || [])
     .map((participant) => `
@@ -1990,23 +2044,47 @@ function renderTournamentMatch(match) {
   `;
 }
 
-async function loadTournaments() {
+async function loadTournaments(options = {}) {
+  const silent = Boolean(options.silent);
   if (!els.tournamentList) return;
   if (!localStorage.getItem(AUTH_TOKEN_KEY)) {
     els.tournamentStatus.textContent = "login required";
+    if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = "login required";
     renderTournamentEmpty("Login to create and view tournament rooms.");
     return;
   }
 
-  els.tournamentStatus.textContent = "loading";
+  if (!silent) els.tournamentStatus.textContent = "loading";
   try {
     const tournaments = await apiRequest("/api/tournaments");
+    const previousSelectedId = state.selectedTournamentId;
     state.tournaments = tournaments;
+    if (previousSelectedId && tournaments.some((item) => item.id === previousSelectedId)) {
+      state.selectedTournamentId = previousSelectedId;
+    }
     els.tournamentStatus.textContent = "ready";
+    if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = `live refresh // ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
     renderTournaments(tournaments);
   } catch (error) {
-    els.tournamentStatus.textContent = error.kind === "offline" ? "backend offline" : "load failed";
-    renderTournamentEmpty(error.detail || "Could not load tournaments.");
+    if (!silent) {
+      els.tournamentStatus.textContent = error.kind === "offline" ? "backend offline" : "load failed";
+      renderTournamentEmpty(error.detail || "Could not load tournaments.");
+    }
+    if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = error.kind === "offline" ? "backend offline" : "refresh failed";
+  }
+}
+
+function startTournamentPolling() {
+  stopTournamentPolling();
+  if (!localStorage.getItem(AUTH_TOKEN_KEY)) return;
+  if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = "live refresh on";
+  state.tournamentPollId = setInterval(() => loadTournaments({ silent: true }), 12000);
+}
+
+function stopTournamentPolling() {
+  if (state.tournamentPollId) {
+    clearInterval(state.tournamentPollId);
+    state.tournamentPollId = null;
   }
 }
 
@@ -2019,8 +2097,14 @@ async function createTournamentFromForm() {
 
   const name = els.tournamentName.value.trim();
   const playerUsernames = parseTournamentPlayers(els.tournamentPlayers.value);
+  const expectedOthers = getTournamentTargetPlayers() - 1;
   if (!name || playerUsernames.length < 1) {
     els.tournamentStatus.textContent = "add players";
+    return;
+  }
+  if (playerUsernames.length !== expectedOthers) {
+    els.tournamentStatus.textContent = `need ${expectedOthers} login${expectedOthers === 1 ? "" : "s"}`;
+    updateTournamentPlayerHint();
     return;
   }
 
@@ -4362,6 +4446,10 @@ els.authForm.addEventListener("submit", handleAuth);
 els.historyRefresh.addEventListener("click", loadMatchHistory);
 if (els.tournamentRefresh) els.tournamentRefresh.addEventListener("click", loadTournaments);
 if (els.tournamentCreate) els.tournamentCreate.addEventListener("click", createTournamentFromForm);
+if (els.tournamentPlayers) els.tournamentPlayers.addEventListener("input", updateTournamentPlayerHint);
+els.tournamentSizeButtons.forEach((button) => {
+  button.addEventListener("click", () => setTournamentTargetSize(button.dataset.tournamentSize));
+});
 els.adminNew.addEventListener("click", resetAdminForm);
 els.adminRefresh.addEventListener("click", loadAdminProblems);
 els.adminSignalsRefresh.addEventListener("click", loadAdminSignals);
@@ -4380,6 +4468,7 @@ async function initApp() {
   loadTheme();
   await loadUser();
   startRoomInvitePolling();
+  updateTournamentPlayerHint();
   renderProblem();
   renderTimer();
   resetArenaLobby();

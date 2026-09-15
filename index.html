@@ -310,7 +310,10 @@
               <span class="panel-kicker">// TOURNAMENT CONTROL</span>
               <h1>Contests</h1>
             </div>
-            <button class="primary-button" id="tournamentRefresh" type="button">Refresh</button>
+            <div class="top-actions">
+              <span class="status-chip" id="tournamentLiveStatus">manual refresh</span>
+              <button class="primary-button" id="tournamentRefresh" type="button">Refresh</button>
+            </div>
           </div>
           <p>Create a 2, 4, 8, 16, or 32 player coding cup. Players are seeded by rating and the bracket is built from the first round through the final.</p>
 
@@ -328,7 +331,14 @@
                 <span>Players by login</span>
                 <textarea id="tournamentPlayers" rows="8" spellcheck="false" placeholder="friend_one&#10;friend_two&#10;friend_three"></textarea>
               </label>
-              <small>Creator is added automatically. Add 1, 3, 7, 15, or 31 other players.</small>
+              <div class="tournament-size-strip" aria-label="Tournament size shortcuts">
+                <button type="button" data-tournament-size="2">2P</button>
+                <button type="button" data-tournament-size="4">4P</button>
+                <button type="button" data-tournament-size="8">8P</button>
+                <button type="button" data-tournament-size="16">16P</button>
+                <button type="button" data-tournament-size="32">32P</button>
+              </div>
+              <small id="tournamentPlayerHint">Creator is added automatically. Add 1, 3, 7, 15, or 31 other players.</small>
               <button class="primary-button" id="tournamentCreate" type="button">Create Bracket</button>
             </article>
 
@@ -346,6 +356,7 @@
               <h2 id="tournamentBracketTitle">Bracket</h2>
               <span id="tournamentBracketStatus">select cup</span>
             </div>
+            <div class="tournament-champion hidden" id="tournamentChampion"></div>
             <div class="tournament-seeds" id="tournamentSeeds"></div>
             <div class="tournament-rounds" id="tournamentRounds"></div>
           </section>

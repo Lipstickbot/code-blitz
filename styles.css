@@ -804,6 +804,19 @@ main::after {
   gap: 8px;
 }
 
+.status-chip {
+  min-height: 36px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--line-soft);
+  color: var(--muted);
+  background: #020202;
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
 .primary-button,
 .success,
 .contest-card button,
@@ -2348,6 +2361,29 @@ main::after {
   line-height: 1.6;
 }
 
+.tournament-size-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--line-soft);
+  background: var(--line-soft);
+}
+
+.tournament-size-strip button {
+  min-height: 34px;
+  background: #020202;
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.tournament-size-strip button.active,
+.tournament-size-strip button:hover {
+  background: var(--text);
+  color: #000;
+}
+
 .tournament-list {
   display: grid;
   gap: 8px;
@@ -2396,6 +2432,39 @@ main::after {
 
 .tournament-bracket-panel {
   margin-top: 18px;
+}
+
+.tournament-bracket-panel.finished {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.13), transparent 10rem),
+    rgba(0, 0, 0, 0.82);
+}
+
+.tournament-champion {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent),
+    #020202;
+}
+
+.tournament-champion span,
+.tournament-champion small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tournament-champion strong {
+  font-size: clamp(1.4rem, 4vw, 3rem);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .tournament-seeds {
@@ -2817,6 +2886,7 @@ body.light-theme .console-tabs {
 
 body.light-theme .nav-item,
 body.light-theme .rating-pill,
+body.light-theme .status-chip,
 body.light-theme .theme-toggle,
 body.light-theme .auth-link,
 body.light-theme .language-select select,
@@ -2831,6 +2901,7 @@ body.light-theme .step-row button,
 body.light-theme .time-option,
 body.light-theme .mode-select,
 body.light-theme .learn-filter-button,
+body.light-theme .tournament-size-strip button,
 body.light-theme .console-tab {
   background: #ededeb;
   color: var(--muted);
@@ -2845,6 +2916,8 @@ body.light-theme .mode.active,
 body.light-theme .mode:hover,
 body.light-theme .learn-filter-button.active,
 body.light-theme .learn-filter-button:hover,
+body.light-theme .tournament-size-strip button.active,
+body.light-theme .tournament-size-strip button:hover,
 body.light-theme .segmented button.active,
 body.light-theme .console-tab.active,
 body.light-theme .console-tab:hover {
@@ -2895,6 +2968,7 @@ body.light-theme .bracket-match,
 body.light-theme .course-card,
 body.light-theme .course-recommendations,
 body.light-theme .course-detail-panel,
+body.light-theme .tournament-champion,
 body.light-theme .about-mission,
 body.light-theme .editor-toolbar,
 body.light-theme .editor-shell,
