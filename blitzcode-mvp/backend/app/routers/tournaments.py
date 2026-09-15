@@ -1,21 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user, get_user_from_token
 from app.config import settings
 from app.database import get_db
-from app.models import Tournament, TournamentBracketMatch, TournamentParticipant, TournamentRound, User
+from app.models import Tournament, User
 from app.schemas import (
-    TournamentBracketMatchOut,
     TournamentCreateIn,
     TournamentOut,
-    TournamentParticipantOut,
-    TournamentRoundOut,
 )
 from app.services.rate_limiter import matchmaking_rate_limiter
 from app.services.tournament_hub import tournament_hub
 from app.services.tournaments import create_tournament, get_tournament_for_user, list_my_tournaments
+from app.services.tournament_views import tournament_out
 
 
 router = APIRouter(prefix="/api/tournaments", tags=["tournaments"])
@@ -29,7 +26,7 @@ async def create_tournament_room(
 ):
     _check_tournament_rate_limit(current_user, "create")
     tournament = await create_tournament(db, current_user, payload.name, payload.player_usernames)
-    return await _tournament_out(db, tournament)
+    return await tournament_out(db, tournament)
 
 
 @router.get("", response_model=list[TournamentOut])
@@ -39,7 +36,7 @@ async def my_tournaments(
 ):
     _check_tournament_rate_limit(current_user, "list")
     tournaments = await list_my_tournaments(db, current_user)
-    return [await _tournament_out(db, tournament) for tournament in tournaments]
+    return [await tournament_out(db, tournament) for tournament in tournaments]
 
 
 @router.get("/{tournament_id}", response_model=TournamentOut)
@@ -50,7 +47,7 @@ async def tournament_detail(
 ):
     _check_tournament_rate_limit(current_user, "detail")
     tournament = await get_tournament_for_user(db, tournament_id, current_user)
-    return await _tournament_out(db, tournament)
+    return await tournament_out(db, tournament)
 
 
 @router.get("/{tournament_id}/bracket", response_model=TournamentOut)
@@ -61,7 +58,20 @@ async def tournament_bracket(
 ):
     _check_tournament_rate_limit(current_user, "bracket")
     tournament = await get_tournament_for_user(db, tournament_id, current_user)
-    return await _tournament_out(db, tournament)
+    return await tournament_out(db, tournament)
+
+
+@router.get("/{tournament_id}/spectate", response_model=TournamentOut)
+async def tournament_spectate(
+    tournament_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _check_tournament_rate_limit(current_user, "spectate")
+    tournament = await db.get(Tournament, tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return await tournament_out(db, tournament)
 
 
 @router.websocket("/{tournament_id}/stream")
@@ -74,16 +84,6 @@ async def stream_tournament(tournament_id: str, websocket: WebSocket, token: str
 
         tournament = await db.get(Tournament, tournament_id)
         if not tournament:
-            await websocket.close(code=4404)
-            return
-
-        participant_result = await db.execute(
-            select(TournamentParticipant.id).where(
-                TournamentParticipant.tournament_id == tournament_id,
-                TournamentParticipant.user_id == user.id,
-            )
-        )
-        if tournament.creator_user_id != user.id and not participant_result.scalar_one_or_none():
             await websocket.close(code=4404)
             return
 
@@ -118,81 +118,3 @@ def _check_tournament_rate_limit(user: User, action: str) -> None:
             detail=f"Too many tournament requests. Try again in {result.retry_after_seconds} seconds.",
             headers={"Retry-After": str(result.retry_after_seconds)},
         )
-
-
-async def _tournament_out(db: AsyncSession, tournament: Tournament) -> TournamentOut:
-    participant_rows = await db.execute(
-        select(TournamentParticipant, User.username)
-        .join(User, User.id == TournamentParticipant.user_id)
-        .where(TournamentParticipant.tournament_id == tournament.id)
-        .order_by(TournamentParticipant.seed)
-    )
-    participants = [
-        TournamentParticipantOut(
-            id=participant.id,
-            user_id=participant.user_id,
-            username=username,
-            seed=participant.seed,
-            status=participant.status,
-            eliminated_round=participant.eliminated_round,
-        )
-        for participant, username in participant_rows.all()
-    ]
-    username_by_participant_id = {participant.id: participant.username for participant in participants}
-
-    bracket_rows = await db.execute(
-        select(TournamentBracketMatch, TournamentRound.round_number, TournamentRound.name, TournamentRound.status)
-        .join(TournamentRound, TournamentRound.id == TournamentBracketMatch.round_id)
-        .where(TournamentBracketMatch.tournament_id == tournament.id)
-        .order_by(TournamentRound.round_number, TournamentBracketMatch.bracket_position)
-    )
-    bracket = [
-        TournamentBracketMatchOut(
-            id=bracket_match.id,
-            round_number=round_number,
-            round_name=round_name,
-            bracket_position=bracket_match.bracket_position,
-            match_id=bracket_match.match_id,
-            status=bracket_match.status,
-            left_participant_id=bracket_match.left_participant_id,
-            right_participant_id=bracket_match.right_participant_id,
-            left_username=username_by_participant_id.get(bracket_match.left_participant_id),
-            right_username=username_by_participant_id.get(bracket_match.right_participant_id),
-            winner_participant_id=bracket_match.winner_participant_id,
-            loser_participant_id=bracket_match.loser_participant_id,
-            next_bracket_match_id=bracket_match.next_bracket_match_id,
-            next_slot=bracket_match.next_slot,
-        )
-        for bracket_match, round_number, round_name, _round_status in bracket_rows.all()
-    ]
-    round_rows = await db.execute(
-        select(TournamentRound)
-        .where(TournamentRound.tournament_id == tournament.id)
-        .order_by(TournamentRound.round_number)
-    )
-    rounds = [
-        TournamentRoundOut(
-            round_number=round_row.round_number,
-            name=round_row.name,
-            status=round_row.status,
-            match_count=sum(1 for bracket_match in bracket if bracket_match.round_number == round_row.round_number),
-            matches=[bracket_match for bracket_match in bracket if bracket_match.round_number == round_row.round_number],
-        )
-        for round_row in round_rows.scalars().all()
-    ]
-
-    return TournamentOut(
-        id=tournament.id,
-        name=tournament.name,
-        status=tournament.status,
-        creator_user_id=tournament.creator_user_id,
-        player_count=tournament.player_count,
-        max_players=tournament.max_players,
-        champion_user_id=tournament.champion_user_id,
-        created_at=tournament.created_at,
-        started_at=tournament.started_at,
-        finished_at=tournament.finished_at,
-        participants=participants,
-        rounds=rounds,
-        bracket=bracket,
-    )

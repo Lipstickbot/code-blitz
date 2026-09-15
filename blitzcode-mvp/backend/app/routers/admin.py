@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import AntiCheatSignal, Problem, Submission, User
-from app.schemas import AntiCheatSignalOut, ProblemCalibrationOut
+from app.schemas import AntiCheatSignalOut, ProblemCalibrationOut, TournamentOut
+from app.services.tournament_views import tournament_out
+from app.services.tournaments import cancel_tournament, list_admin_tournaments
 
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -14,6 +16,30 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 def _require_admin(user: User) -> None:
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
+
+
+@router.get("/tournaments", response_model=list[TournamentOut])
+async def admin_list_tournaments(
+    status: str | None = None,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _require_admin(current_user)
+    tournaments = await list_admin_tournaments(db, status=status, limit=limit, offset=offset)
+    return [await tournament_out(db, tournament) for tournament in tournaments]
+
+
+@router.post("/tournaments/{tournament_id}/cancel", response_model=TournamentOut)
+async def admin_cancel_tournament(
+    tournament_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _require_admin(current_user)
+    tournament = await cancel_tournament(db, tournament_id)
+    return await tournament_out(db, tournament)
 
 
 @router.get("/problem-calibration", response_model=list[ProblemCalibrationOut])

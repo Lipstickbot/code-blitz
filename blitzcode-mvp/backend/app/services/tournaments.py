@@ -98,6 +98,20 @@ async def list_my_tournaments(db: AsyncSession, user: User) -> list[Tournament]:
     return list(result.scalars().all())
 
 
+async def list_admin_tournaments(
+    db: AsyncSession,
+    status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Tournament]:
+    query = select(Tournament)
+    if status:
+        query = query.where(Tournament.status == status)
+    query = query.order_by(Tournament.created_at.desc()).offset(offset).limit(limit)
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
 async def get_tournament_for_user(db: AsyncSession, tournament_id: str, user: User) -> Tournament:
     tournament = await db.get(Tournament, tournament_id)
     if not tournament:
@@ -110,6 +124,65 @@ async def get_tournament_for_user(db: AsyncSession, tournament_id: str, user: Us
     )
     if tournament.creator_user_id != user.id and not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Tournament not found")
+    return tournament
+
+
+async def cancel_tournament(db: AsyncSession, tournament_id: str) -> Tournament:
+    tournament = await db.get(Tournament, tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    if tournament.status == "finished":
+        raise HTTPException(status_code=400, detail="Finished tournaments cannot be canceled")
+    if tournament.status == "cancelled":
+        return tournament
+
+    now = datetime.utcnow()
+    tournament.status = "cancelled"
+    tournament.finished_at = now
+
+    participant_result = await db.execute(
+        select(TournamentParticipant).where(TournamentParticipant.tournament_id == tournament_id)
+    )
+    for participant in participant_result.scalars().all():
+        if participant.status == "active":
+            participant.status = "cancelled"
+            participant.eliminated_at = now
+
+    round_result = await db.execute(select(TournamentRound).where(TournamentRound.tournament_id == tournament_id))
+    for round_row in round_result.scalars().all():
+        if round_row.status != "finished":
+            round_row.status = "cancelled"
+            round_row.finished_at = now
+
+    bracket_result = await db.execute(
+        select(TournamentBracketMatch).where(TournamentBracketMatch.tournament_id == tournament_id)
+    )
+    match_ids: list[str] = []
+    for bracket_match in bracket_result.scalars().all():
+        if bracket_match.status != "finished":
+            bracket_match.status = "cancelled"
+            bracket_match.finished_at = now
+        if bracket_match.match_id:
+            match_ids.append(bracket_match.match_id)
+
+    if match_ids:
+        match_result = await db.execute(select(Match).where(Match.id.in_(match_ids)))
+        for match in match_result.scalars().all():
+            if match.status != "finished":
+                match.status = "cancelled"
+                match.finished_at = now
+
+    await db.commit()
+    await db.refresh(tournament)
+    await tournament_hub.broadcast(
+        tournament_id,
+        {
+            "type": "tournament_updated",
+            "tournament_id": tournament_id,
+            "reason": "admin_cancelled",
+            "status": "cancelled",
+        },
+    )
     return tournament
 
 
