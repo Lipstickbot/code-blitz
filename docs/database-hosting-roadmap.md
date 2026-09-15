@@ -51,6 +51,8 @@ Why: `submissions` stores the big result, `submission_case_results` stores detai
 
 Why: match task payload is stored separately so both players always receive the same task set.
 For tournaments, the bracket stores only structure and advancement; the actual coding race still uses the normal `matches`, `match_participants` and `match_tasks` tables.
+Tournament creation seeds players by rating, pairs first round as `1 vs N`, `2 vs N-1`, and creates every bracket node up front through the final.
+The API returns both a flat `bracket` list and grouped `rounds`, so the frontend can render Quarterfinal, Semifinal and Final without guessing.
 
 ### Learning
 

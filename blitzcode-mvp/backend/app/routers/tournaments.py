@@ -6,7 +6,13 @@ from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
 from app.models import Tournament, TournamentBracketMatch, TournamentParticipant, TournamentRound, User
-from app.schemas import TournamentBracketMatchOut, TournamentCreateIn, TournamentOut, TournamentParticipantOut
+from app.schemas import (
+    TournamentBracketMatchOut,
+    TournamentCreateIn,
+    TournamentOut,
+    TournamentParticipantOut,
+    TournamentRoundOut,
+)
 from app.services.rate_limiter import matchmaking_rate_limiter
 from app.services.tournaments import create_tournament, get_tournament_for_user, list_my_tournaments
 
@@ -92,7 +98,7 @@ async def _tournament_out(db: AsyncSession, tournament: Tournament) -> Tournamen
     username_by_participant_id = {participant.id: participant.username for participant in participants}
 
     bracket_rows = await db.execute(
-        select(TournamentBracketMatch, TournamentRound.round_number)
+        select(TournamentBracketMatch, TournamentRound.round_number, TournamentRound.name, TournamentRound.status)
         .join(TournamentRound, TournamentRound.id == TournamentBracketMatch.round_id)
         .where(TournamentBracketMatch.tournament_id == tournament.id)
         .order_by(TournamentRound.round_number, TournamentBracketMatch.bracket_position)
@@ -101,6 +107,7 @@ async def _tournament_out(db: AsyncSession, tournament: Tournament) -> Tournamen
         TournamentBracketMatchOut(
             id=bracket_match.id,
             round_number=round_number,
+            round_name=round_name,
             bracket_position=bracket_match.bracket_position,
             match_id=bracket_match.match_id,
             status=bracket_match.status,
@@ -113,7 +120,22 @@ async def _tournament_out(db: AsyncSession, tournament: Tournament) -> Tournamen
             next_bracket_match_id=bracket_match.next_bracket_match_id,
             next_slot=bracket_match.next_slot,
         )
-        for bracket_match, round_number in bracket_rows.all()
+        for bracket_match, round_number, round_name, _round_status in bracket_rows.all()
+    ]
+    round_rows = await db.execute(
+        select(TournamentRound)
+        .where(TournamentRound.tournament_id == tournament.id)
+        .order_by(TournamentRound.round_number)
+    )
+    rounds = [
+        TournamentRoundOut(
+            round_number=round_row.round_number,
+            name=round_row.name,
+            status=round_row.status,
+            match_count=sum(1 for bracket_match in bracket if bracket_match.round_number == round_row.round_number),
+            matches=[bracket_match for bracket_match in bracket if bracket_match.round_number == round_row.round_number],
+        )
+        for round_row in round_rows.scalars().all()
     ]
 
     return TournamentOut(
@@ -128,5 +150,6 @@ async def _tournament_out(db: AsyncSession, tournament: Tournament) -> Tournamen
         started_at=tournament.started_at,
         finished_at=tournament.finished_at,
         participants=participants,
+        rounds=rounds,
         bracket=bracket,
     )

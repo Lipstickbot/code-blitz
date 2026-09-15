@@ -61,6 +61,8 @@
 - Personalized learning recommendations endpoint and Learn screen recommendation rail.
 - Richer lesson content seed with theory text, checklist items and database fields.
 - Tournament backend foundation: 2/4/8/16/32-player rooms, bracket rounds, automatic winner advance and final champion.
+- Tournament bracket output now includes grouped rounds and rating-seeded first-round pairings through the final.
+- Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 

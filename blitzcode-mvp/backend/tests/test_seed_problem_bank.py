@@ -16,15 +16,15 @@ class SeedProblemBankTests(unittest.TestCase):
     def test_problem_bank_has_expected_size_and_unique_slugs(self):
         slugs = [problem["slug"] for problem in self.problems]
 
-        self.assertGreaterEqual(len(self.problems), 50)
+        self.assertGreaterEqual(len(self.problems), 100)
         self.assertEqual(len(slugs), len(set(slugs)))
 
     def test_each_difficulty_has_enough_match_choices(self):
         counts = Counter(problem["difficulty"] for problem in self.problems)
 
-        self.assertGreaterEqual(counts["easy"], 18)
-        self.assertGreaterEqual(counts["medium"], 15)
-        self.assertGreaterEqual(counts["hard"], 12)
+        self.assertGreaterEqual(counts["easy"], 30)
+        self.assertGreaterEqual(counts["medium"], 25)
+        self.assertGreaterEqual(counts["hard"], 20)
 
     def test_each_problem_has_sample_and_hidden_cases(self):
         missing = []
@@ -47,6 +47,10 @@ class SeedProblemBankTests(unittest.TestCase):
                 or not problem.get("title")
                 or problem.get("difficulty") not in allowed_difficulties
                 or not problem.get("statement")
+                or not problem.get("tags")
+                or not problem.get("concept_group")
+                or not isinstance(problem.get("estimated_seconds"), int)
+                or not isinstance(problem.get("speed_score"), int)
                 or not problem.get("starter_code_js", "").startswith("function solve")
                 or len(cases) < 5
                 or any("input" not in case or "expected" not in case for case in cases)

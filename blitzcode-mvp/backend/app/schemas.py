@@ -361,6 +361,7 @@ class TournamentParticipantOut(BaseModel):
 class TournamentBracketMatchOut(BaseModel):
     id: str
     round_number: int
+    round_name: str
     bracket_position: int
     match_id: str | None = None
     status: str
@@ -372,6 +373,14 @@ class TournamentBracketMatchOut(BaseModel):
     loser_participant_id: str | None = None
     next_bracket_match_id: str | None = None
     next_slot: str | None = None
+
+
+class TournamentRoundOut(BaseModel):
+    round_number: int
+    name: str
+    status: str
+    match_count: int
+    matches: list[TournamentBracketMatchOut]
 
 
 class TournamentOut(BaseModel):
@@ -386,6 +395,7 @@ class TournamentOut(BaseModel):
     started_at: datetime | None = None
     finished_at: datetime | None = None
     participants: list[TournamentParticipantOut]
+    rounds: list[TournamentRoundOut]
     bracket: list[TournamentBracketMatchOut]
 
 

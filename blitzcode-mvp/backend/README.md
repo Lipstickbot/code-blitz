@@ -160,6 +160,7 @@ Backend работает по SQLAlchemy-моделям и Alembic-миграц�
 - добавлены первые online endpoints: `/api/matchmaking/join`, `/api/matchmaking/status`, `/api/matchmaking/cancel`, `/api/matches/active`, `/api/matches/{id}`;
 - задачи online match для арены доступны через `/api/matches/{id}/tasks`;
 - replay online match доступен через `/api/matches/{id}/replay`: задачи, события и submission-метаданные без исходного кода;
+- турниры доступны через `/api/tournaments`: игроки сидируются по рейтингу, первый раунд строится `1 vs N`, `2 vs N-1`, а ответ содержит `rounds` и плоский `bracket` до финала;
 - matchmaking расширяет рейтинг-окно ожидания: `±100`, `±200`, `±350`, `±600`;
 - matchmaking endpoints защищены rate limit настройками `MATCHMAKING_RATE_LIMIT_COUNT` и `MATCHMAKING_RATE_LIMIT_WINDOW_SECONDS`;
 - task picker выбирает ranked-набор `easy, easy, medium, easy, medium, hard`;

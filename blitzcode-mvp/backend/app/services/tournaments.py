@@ -20,7 +20,13 @@ from app.models import (
 )
 from app.services.matchmaker import MATCH_DURATION_SECONDS
 from app.services.task_picker import pick_ranked_match_tasks
-from app.services.tournament_rules import MAX_TOURNAMENT_PLAYERS, is_valid_tournament_size
+from app.services.tournament_rules import (
+    MAX_TOURNAMENT_PLAYERS,
+    first_round_seed_pairs,
+    is_valid_tournament_size,
+    tournament_round_count,
+    tournament_round_name,
+)
 
 
 async def create_tournament(
@@ -36,6 +42,7 @@ async def create_tournament(
     users = await _load_users_by_usernames(db, usernames)
     await _ensure_players_are_available(db, [user.id for user in users])
     await _cancel_open_searches(db, [user.id for user in users])
+    seeded_users = await _seed_users_by_rating(db, users)
 
     now = datetime.utcnow()
     tournament = Tournament(
@@ -43,7 +50,7 @@ async def create_tournament(
         creator_user_id=creator.id,
         status="active",
         max_players=MAX_TOURNAMENT_PLAYERS,
-        player_count=len(users),
+        player_count=len(seeded_users),
         started_at=now,
     )
     db.add(tournament)
@@ -56,16 +63,18 @@ async def create_tournament(
             seed=index + 1,
             status="active",
         )
-        for index, user in enumerate(users)
+        for index, user in enumerate(seeded_users)
     ]
     db.add_all(participants)
     await db.flush()
 
     rounds, bracket_by_round = await _create_bracket_shell(db, tournament, len(participants))
     first_round = bracket_by_round[1]
-    for index, bracket_match in enumerate(first_round):
-        bracket_match.left_participant_id = participants[index * 2].id
-        bracket_match.right_participant_id = participants[index * 2 + 1].id
+    participants_by_seed = {participant.seed: participant for participant in participants}
+    for index, (left_seed, right_seed) in enumerate(first_round_seed_pairs(len(participants))):
+        bracket_match = first_round[index]
+        bracket_match.left_participant_id = participants_by_seed[left_seed].id
+        bracket_match.right_participant_id = participants_by_seed[right_seed].id
     await db.flush()
 
     rounds[0].status = "active"
@@ -196,12 +205,21 @@ async def _cancel_open_searches(db: AsyncSession, user_ids: list[str]) -> None:
         queue_row.status = "cancelled"
 
 
+async def _seed_users_by_rating(db: AsyncSession, users: list[User]) -> list[User]:
+    stats_rows = await db.execute(select(UserStats).where(UserStats.user_id.in_([user.id for user in users])))
+    rating_by_user_id = {stats.user_id: stats.rating for stats in stats_rows.scalars().all()}
+    return sorted(
+        users,
+        key=lambda user: (-(rating_by_user_id.get(user.id) or user.rating or 1200), user.username.lower()),
+    )
+
+
 async def _create_bracket_shell(
     db: AsyncSession,
     tournament: Tournament,
     player_count: int,
 ) -> tuple[list[TournamentRound], dict[int, list[TournamentBracketMatch]]]:
-    total_rounds = _round_count(player_count)
+    total_rounds = tournament_round_count(player_count)
     rounds: list[TournamentRound] = []
     bracket_by_round: dict[int, list[TournamentBracketMatch]] = {}
 
@@ -209,7 +227,7 @@ async def _create_bracket_shell(
         round_row = TournamentRound(
             tournament_id=tournament.id,
             round_number=round_number,
-            name=_round_name(round_number, total_rounds),
+            name=tournament_round_name(round_number, total_rounds),
             status="waiting",
         )
         db.add(round_row)
@@ -333,22 +351,3 @@ async def _get_or_create_stats(db: AsyncSession, user: User) -> UserStats:
     db.add(stats)
     await db.flush()
     return stats
-
-
-def _round_count(player_count: int) -> int:
-    rounds = 0
-    while player_count > 1:
-        rounds += 1
-        player_count //= 2
-    return rounds
-
-
-def _round_name(round_number: int, total_rounds: int) -> str:
-    distance_to_final = total_rounds - round_number
-    if distance_to_final == 0:
-        return "Final"
-    if distance_to_final == 1:
-        return "Semifinal"
-    if distance_to_final == 2:
-        return "Quarterfinal"
-    return f"Round {round_number}"
