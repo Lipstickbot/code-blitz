@@ -20,6 +20,7 @@ from app.models import (
 )
 from app.services.matchmaker import MATCH_DURATION_SECONDS
 from app.services.task_picker import pick_ranked_match_tasks
+from app.services.tournament_hub import tournament_hub
 from app.services.tournament_rules import (
     MAX_TOURNAMENT_PLAYERS,
     first_round_seed_pairs,
@@ -146,6 +147,13 @@ async def advance_tournament_after_match(db: AsyncSession, match: Match) -> None
             tournament.champion_user_id = winner.user_id
             tournament.finished_at = now
         winner.status = "champion"
+        await _broadcast_tournament_update(
+            bracket_match.tournament_id,
+            "champion_decided",
+            bracket_match=bracket_match,
+            winner=winner,
+            loser=loser,
+        )
         return
 
     next_match = await db.get(TournamentBracketMatch, bracket_match.next_bracket_match_id)
@@ -161,6 +169,15 @@ async def advance_tournament_after_match(db: AsyncSession, match: Match) -> None
         if next_round:
             next_round.status = "active"
         await _create_match_for_bracket(db, next_match)
+
+    await _broadcast_tournament_update(
+        bracket_match.tournament_id,
+        "winner_advanced",
+        bracket_match=bracket_match,
+        winner=winner,
+        loser=loser,
+        next_bracket_match=next_match,
+    )
 
 
 def _normalize_tournament_usernames(creator_username: str, player_usernames: list[str]) -> list[str]:
@@ -351,3 +368,30 @@ async def _get_or_create_stats(db: AsyncSession, user: User) -> UserStats:
     db.add(stats)
     await db.flush()
     return stats
+
+
+async def _broadcast_tournament_update(
+    tournament_id: str,
+    reason: str,
+    *,
+    bracket_match: TournamentBracketMatch,
+    winner: TournamentParticipant,
+    loser: TournamentParticipant,
+    next_bracket_match: TournamentBracketMatch | None = None,
+) -> None:
+    await tournament_hub.broadcast(
+        tournament_id,
+        {
+            "type": "tournament_updated",
+            "tournament_id": tournament_id,
+            "reason": reason,
+            "bracket_match_id": bracket_match.id,
+            "match_id": bracket_match.match_id,
+            "winner_participant_id": winner.id,
+            "winner_user_id": winner.user_id,
+            "loser_participant_id": loser.id,
+            "loser_user_id": loser.user_id,
+            "next_bracket_match_id": next_bracket_match.id if next_bracket_match else None,
+            "status": "finished" if reason == "champion_decided" else "active",
+        },
+    )

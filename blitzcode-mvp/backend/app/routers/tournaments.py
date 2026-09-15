@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import get_current_user
+from app.auth import get_current_user, get_user_from_token
 from app.config import settings
 from app.database import get_db
 from app.models import Tournament, TournamentBracketMatch, TournamentParticipant, TournamentRound, User
@@ -14,6 +14,7 @@ from app.schemas import (
     TournamentRoundOut,
 )
 from app.services.rate_limiter import matchmaking_rate_limiter
+from app.services.tournament_hub import tournament_hub
 from app.services.tournaments import create_tournament, get_tournament_for_user, list_my_tournaments
 
 
@@ -61,6 +62,48 @@ async def tournament_bracket(
     _check_tournament_rate_limit(current_user, "bracket")
     tournament = await get_tournament_for_user(db, tournament_id, current_user)
     return await _tournament_out(db, tournament)
+
+
+@router.websocket("/{tournament_id}/stream")
+async def stream_tournament(tournament_id: str, websocket: WebSocket, token: str | None = None):
+    async for db in get_db():
+        user = await get_user_from_token(token, db)
+        if not user:
+            await websocket.close(code=4401)
+            return
+
+        tournament = await db.get(Tournament, tournament_id)
+        if not tournament:
+            await websocket.close(code=4404)
+            return
+
+        participant_result = await db.execute(
+            select(TournamentParticipant.id).where(
+                TournamentParticipant.tournament_id == tournament_id,
+                TournamentParticipant.user_id == user.id,
+            )
+        )
+        if tournament.creator_user_id != user.id and not participant_result.scalar_one_or_none():
+            await websocket.close(code=4404)
+            return
+
+        await tournament_hub.connect(tournament_id, websocket)
+        await websocket.send_json(
+            {
+                "type": "snapshot",
+                "tournament_id": tournament.id,
+                "status": tournament.status,
+                "player_count": tournament.player_count,
+                "champion_user_id": tournament.champion_user_id,
+            }
+        )
+
+        try:
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            tournament_hub.disconnect(tournament_id, websocket)
+        return
 
 
 def _check_tournament_rate_limit(user: User, action: str) -> None:

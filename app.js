@@ -927,6 +927,8 @@ const state = {
   roomWaitReject: null,
   roomInvitePollId: null,
   tournamentPollId: null,
+  tournamentSocket: null,
+  tournamentSocketTournamentId: null,
   tournamentTargetSize: 4,
   currentMatchStartedAt: null,
   matchPollId: null,
@@ -1954,7 +1956,10 @@ function renderTournaments(tournaments = state.tournaments) {
   });
 
   const selected = tournaments.find((item) => item.id === state.selectedTournamentId);
-  if (selected) renderTournamentBracket(selected);
+  if (selected) {
+    renderTournamentBracket(selected);
+    connectTournamentStream(selected.id);
+  }
 }
 
 function selectTournament(tournamentId, rerenderList = true) {
@@ -1962,6 +1967,7 @@ function selectTournament(tournamentId, rerenderList = true) {
   const tournament = state.tournaments.find((item) => item.id === tournamentId);
   if (rerenderList) renderTournaments();
   renderTournamentBracket(tournament);
+  connectTournamentStream(tournamentId);
 }
 
 function renderTournamentBracket(tournament) {
@@ -2078,7 +2084,8 @@ function startTournamentPolling() {
   stopTournamentPolling();
   if (!localStorage.getItem(AUTH_TOKEN_KEY)) return;
   if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = "live refresh on";
-  state.tournamentPollId = setInterval(() => loadTournaments({ silent: true }), 12000);
+  if (state.selectedTournamentId) connectTournamentStream(state.selectedTournamentId);
+  state.tournamentPollId = setInterval(() => loadTournaments({ silent: true }), 30000);
 }
 
 function stopTournamentPolling() {
@@ -2086,6 +2093,56 @@ function stopTournamentPolling() {
     clearInterval(state.tournamentPollId);
     state.tournamentPollId = null;
   }
+  closeTournamentStream();
+}
+
+function closeTournamentStream() {
+  if (state.tournamentSocket) {
+    state.tournamentSocket.close();
+    state.tournamentSocket = null;
+  }
+  state.tournamentSocketTournamentId = null;
+}
+
+function connectTournamentStream(tournamentId) {
+  if (!tournamentId || !localStorage.getItem(AUTH_TOKEN_KEY) || !els.views.contests.classList.contains("active")) return;
+  if (state.tournamentSocket && state.tournamentSocketTournamentId === tournamentId) return;
+  closeTournamentStream();
+
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const socket = new WebSocket(`${WS_BASE}/api/tournaments/${encodeURIComponent(tournamentId)}/stream?token=${encodeURIComponent(token)}`);
+  state.tournamentSocket = socket;
+  state.tournamentSocketTournamentId = tournamentId;
+
+  socket.addEventListener("open", () => {
+    if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = "socket live";
+  });
+
+  socket.addEventListener("message", async (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (payload.type === "snapshot") {
+        if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = `socket // ${payload.status}`;
+        return;
+      }
+      if (payload.type === "tournament_updated") {
+        if (els.tournamentLiveStatus) els.tournamentLiveStatus.textContent = `event // ${payload.reason}`;
+        await loadTournaments({ silent: true });
+      }
+    } catch (error) {
+      console.warn("Bad tournament event.", error);
+    }
+  });
+
+  socket.addEventListener("close", () => {
+    if (state.tournamentSocket === socket) {
+      state.tournamentSocket = null;
+      state.tournamentSocketTournamentId = null;
+      if (els.tournamentLiveStatus && els.views.contests.classList.contains("active")) {
+        els.tournamentLiveStatus.textContent = "socket closed";
+      }
+    }
+  });
 }
 
 async function createTournamentFromForm() {

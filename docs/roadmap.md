@@ -64,18 +64,19 @@
 - Tournament bracket output now includes grouped rounds and rating-seeded first-round pairings through the final.
 - Tournament frontend room: create cups by login list, view seeds, grouped bracket rounds and enter active matches.
 - Tournament UI polish: auto-refresh, size shortcuts, player-count hints and champion banner.
+- Tournament WebSocket stream for bracket update events when winners advance.
 - Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
-- Add true tournament WebSocket events instead of polling.
+- Add tournament spectator mode and admin tournament controls.
 
 ## Later
 
 - OAuth login with Google/GitHub after local auth is stable.
 - Friend-room polish: WebSocket invite notifications and rematch flow.
-- Tournament polish: live bracket WebSocket updates, spectator mode and admin tournament controls.
+- Tournament polish: spectator mode and admin tournament controls.
 - Learning polish: more courses later, stronger recommendation signals and premium checkout integration if paid tracks return.
 - Typed adapter contract for compiled language judging: C++, Java, Go, Rust.
