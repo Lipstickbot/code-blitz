@@ -66,13 +66,14 @@
 - Tournament UI polish: auto-refresh, size shortcuts, player-count hints and champion banner.
 - Tournament WebSocket stream for bracket update events when winners advance.
 - Tournament spectator API and admin backend controls for listing/canceling tournament rooms.
+- Admin tournament monitor UI with active room counts and cancel action.
 - Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
-- Add frontend admin controls for tournament monitoring/cancel actions.
+- Add public/shareable tournament spectator links.
 
 ## Later
 

@@ -945,6 +945,7 @@ const state = {
   adminProblems: [],
   adminSignals: [],
   adminCalibration: [],
+  adminTournaments: [],
   adminEditingProblemId: null,
   historyMatches: [],
   tournaments: [],
@@ -1067,10 +1068,13 @@ const els = {
   adminRefresh: document.querySelector("#adminRefresh"),
   adminSignalsRefresh: document.querySelector("#adminSignalsRefresh"),
   adminCalibrationRefresh: document.querySelector("#adminCalibrationRefresh"),
+  adminTournamentsRefresh: document.querySelector("#adminTournamentsRefresh"),
   adminSignalsStatus: document.querySelector("#adminSignalsStatus"),
   adminSignalList: document.querySelector("#adminSignalList"),
   adminCalibrationStatus: document.querySelector("#adminCalibrationStatus"),
   adminCalibrationList: document.querySelector("#adminCalibrationList"),
+  adminTournamentsStatus: document.querySelector("#adminTournamentsStatus"),
+  adminTournamentList: document.querySelector("#adminTournamentList"),
   adminStatus: document.querySelector("#adminStatus"),
   adminProblemList: document.querySelector("#adminProblemList"),
   adminProblemForm: document.querySelector("#adminProblemForm"),
@@ -2652,6 +2656,73 @@ async function loadAdminCalibration() {
   }
 }
 
+function renderAdminTournaments(tournaments) {
+  if (!els.adminTournamentList) return;
+  if (!tournaments.length) {
+    els.adminTournamentList.innerHTML = `<p class="admin-empty">No tournament rooms yet.</p>`;
+    return;
+  }
+  els.adminTournamentList.innerHTML = tournaments
+    .map((tournament) => {
+      const champion = tournament.champion_user_id
+        ? tournament.participants?.find((item) => item.user_id === tournament.champion_user_id)?.username || "locked"
+        : "none";
+      const activeMatches = (tournament.bracket || []).filter((match) => match.status === "active").length;
+      const canCancel = tournament.status === "active";
+      return `
+        <article class="admin-signal-card admin-tournament-card">
+          <div>
+            <strong>${escapeHtml(tournament.name)}</strong>
+            <small>${escapeHtml(tournament.status)} · ${tournament.player_count}/${tournament.max_players} players · ${activeMatches} live</small>
+            <p>Champion: ${escapeHtml(champion)} · Created: ${escapeHtml(formatTournamentDate(tournament.created_at))}</p>
+          </div>
+          ${canCancel ? `<button class="primary-button danger-button" data-cancel-tournament="${escapeHtml(tournament.id)}" type="button">Cancel</button>` : ""}
+        </article>
+      `;
+    })
+    .join("");
+  els.adminTournamentList.querySelectorAll("[data-cancel-tournament]").forEach((button) => {
+    button.addEventListener("click", () => cancelAdminTournament(button.dataset.cancelTournament));
+  });
+}
+
+async function loadAdminTournaments() {
+  if (!state.currentUser.isAdmin || !els.adminTournamentsStatus) return;
+  els.adminTournamentsStatus.textContent = "loading";
+  try {
+    const tournaments = await apiRequest("/api/admin/tournaments?limit=30");
+    state.adminTournaments = tournaments;
+    renderAdminTournaments(tournaments);
+    const activeCount = tournaments.filter((tournament) => tournament.status === "active").length;
+    els.adminTournamentsStatus.textContent = `${activeCount} active / ${tournaments.length} total`;
+  } catch (error) {
+    const details = describeApiError(error, "load tournament monitor");
+    els.adminTournamentsStatus.textContent = details.status;
+    els.adminTournamentList.innerHTML = `<p class="admin-empty">${details.terminal.join("<br>")}</p>`;
+  }
+}
+
+async function cancelAdminTournament(tournamentId) {
+  if (!tournamentId || !state.currentUser.isAdmin) return;
+  if (els.adminTournamentsStatus) els.adminTournamentsStatus.textContent = "cancelling";
+  try {
+    const updated = await apiRequest(`/api/admin/tournaments/${tournamentId}/cancel`, {
+      method: "POST",
+    });
+    state.adminTournaments = state.adminTournaments.map((tournament) =>
+      tournament.id === tournamentId ? updated : tournament
+    );
+    renderAdminTournaments(state.adminTournaments);
+    if (els.adminTournamentsStatus) {
+      const activeCount = state.adminTournaments.filter((tournament) => tournament.status === "active").length;
+      els.adminTournamentsStatus.textContent = `${activeCount} active / ${state.adminTournaments.length} total`;
+    }
+  } catch (error) {
+    const details = describeApiError(error, "cancel tournament");
+    if (els.adminTournamentsStatus) els.adminTournamentsStatus.textContent = details.status;
+  }
+}
+
 async function loadAdminProblems() {
   if (!state.currentUser.isAdmin) return;
   els.adminStatus.textContent = "loading";
@@ -2662,6 +2733,7 @@ async function loadAdminProblems() {
     els.adminStatus.textContent = `${problems.length} active`;
     loadAdminSignals();
     loadAdminCalibration();
+    loadAdminTournaments();
   } catch (error) {
     const details = describeApiError(error, "load admin tasks");
     els.adminStatus.textContent = details.status;
@@ -4511,6 +4583,7 @@ els.adminNew.addEventListener("click", resetAdminForm);
 els.adminRefresh.addEventListener("click", loadAdminProblems);
 els.adminSignalsRefresh.addEventListener("click", loadAdminSignals);
 els.adminCalibrationRefresh.addEventListener("click", loadAdminCalibration);
+els.adminTournamentsRefresh.addEventListener("click", loadAdminTournaments);
 els.adminProblemForm.addEventListener("submit", handleAdminProblemSubmit);
 document.querySelectorAll("[data-review-status]").forEach((button) => {
   button.addEventListener("click", () => submitAdminReview(button.dataset.reviewStatus));

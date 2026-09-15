@@ -2067,6 +2067,20 @@ main::after {
   cursor: default;
 }
 
+.admin-tournament-card {
+  align-items: center;
+}
+
+.danger-button {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text);
+}
+
+.danger-button:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .admin-signal-card.severity-high {
   border-color: rgba(255, 255, 255, 0.55);
 }
