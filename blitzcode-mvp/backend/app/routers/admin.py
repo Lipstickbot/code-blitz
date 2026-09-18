@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import AntiCheatSignal, Problem, Submission, User
-from app.schemas import AntiCheatSignalOut, ProblemCalibrationOut, TournamentOut
+from app.models import AntiCheatSignal, Problem, Submission, Tournament, TournamentAuditLog, User
+from app.schemas import AntiCheatSignalOut, ProblemCalibrationOut, TournamentAuditLogOut, TournamentOut
 from app.services.tournament_views import tournament_out
 from app.services.tournaments import cancel_tournament, list_admin_tournaments
 
@@ -38,8 +38,42 @@ async def admin_cancel_tournament(
     current_user: User = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    tournament = await cancel_tournament(db, tournament_id)
+    tournament = await cancel_tournament(db, tournament_id, actor_user_id=current_user.id)
     return await tournament_out(db, tournament)
+
+
+@router.get("/tournaments/{tournament_id}/audit-logs", response_model=list[TournamentAuditLogOut])
+async def admin_tournament_audit_logs(
+    tournament_id: str,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _require_admin(current_user)
+    tournament = await db.get(Tournament, tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    result = await db.execute(
+        select(TournamentAuditLog, User.username)
+        .outerjoin(User, User.id == TournamentAuditLog.actor_user_id)
+        .where(TournamentAuditLog.tournament_id == tournament_id)
+        .order_by(desc(TournamentAuditLog.created_at))
+        .offset(offset)
+        .limit(limit)
+    )
+    return [
+        TournamentAuditLogOut(
+            id=log.id,
+            tournament_id=log.tournament_id,
+            actor_user_id=log.actor_user_id,
+            actor_username=username,
+            action=log.action,
+            payload=log.payload,
+            created_at=log.created_at,
+        )
+        for log, username in result.all()
+    ]
 
 
 @router.get("/problem-calibration", response_model=list[ProblemCalibrationOut])

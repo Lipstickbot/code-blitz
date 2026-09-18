@@ -408,6 +408,17 @@ class TournamentBracketMatch(Base):
     round: Mapped["TournamentRound"] = relationship(back_populates="bracket_matches")
 
 
+class TournamentAuditLog(Base):
+    __tablename__ = "tournament_audit_logs"
+
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    tournament_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("tournaments.id", ondelete="CASCADE"))
+    actor_user_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=True)
+    action: Mapped[str] = mapped_column(String(60))
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class SubmissionCaseResult(Base):
     __tablename__ = "submission_case_results"
     __table_args__ = (UniqueConstraint("submission_id", "position", name="uq_submission_case_position"),)
@@ -551,6 +562,8 @@ Index("ix_tournament_participants_user_status", TournamentParticipant.user_id, T
 Index("ix_tournament_rounds_tournament_number", TournamentRound.tournament_id, TournamentRound.round_number)
 Index("ix_tournament_bracket_tournament_status", TournamentBracketMatch.tournament_id, TournamentBracketMatch.status)
 Index("ix_tournament_bracket_match_id", TournamentBracketMatch.match_id)
+Index("ix_tournament_audit_tournament_created", TournamentAuditLog.tournament_id, TournamentAuditLog.created_at)
+Index("ix_tournament_audit_actor_created", TournamentAuditLog.actor_user_id, TournamentAuditLog.created_at)
 Index("ix_submissions_user_created", Submission.user_id, Submission.created_at)
 Index("ix_submissions_problem_created", Submission.problem_id, Submission.created_at)
 Index("ix_submissions_match_task_created", Submission.match_id, Submission.match_task_id, Submission.created_at)

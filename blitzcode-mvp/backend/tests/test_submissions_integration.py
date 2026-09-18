@@ -97,6 +97,14 @@ class SubmissionsApiIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(payload["status"], "wrong_answer")
         self.assertLess(payload["passed_count"], payload["total_count"])
         self.assertTrue(any(case["status"] == "wrong_answer" for case in payload["case_results"]))
+        self.assertTrue(all("expected" not in case and "actual" not in case for case in payload["case_results"]))
+
+    async def test_run_returns_console_output_for_sample_cases(self):
+        response = await self._post_submission(
+            kind="run", code="function solve(a, b) { console.log('sum', a + b); return a + b; }"
+        )
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["case_results"][0]["stdout"], "sum 1")
 
     async def _create_problem(self):
         async with self.AsyncSessionLocal() as db:

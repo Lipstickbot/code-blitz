@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import hash_password, verify_password, create_access_token, get_current_user
@@ -37,7 +37,8 @@ async def register(request: Request, payload: RegisterRequest, db: AsyncSession 
 @router.post("/login", response_model=TokenResponse)
 async def login(request: Request, payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     _check_auth_rate_limit(request, "login")
-    result = await db.execute(select(User).where(User.email == payload.email))
+    selector = User.email == payload.email if "@" in payload.email else func.lower(User.username) == payload.email
+    result = await db.execute(select(User).where(selector))
     user = result.scalar_one_or_none()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")

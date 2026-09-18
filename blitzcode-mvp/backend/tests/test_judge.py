@@ -88,6 +88,16 @@ class PythonJudgeTests(unittest.TestCase):
         self.assertEqual(result.status, "runtime_error")
         self.assertEqual(result.case_results[0].status, "runtime_error")
         self.assertIn("division by zero", result.case_results[0].error_message)
+        self.assertIn("Line 2", result.case_results[0].error_message)
+
+    def test_python_print_is_returned_without_corrupting_results(self):
+        result = judge.evaluate(
+            "def solve(value):\n    print('value', value)\n    return value + 1\n",
+            "python",
+            [make_case(1, [4], 5)],
+        )
+        self.assertEqual(result.status, "accepted")
+        self.assertEqual(result.case_results[0].stdout.strip(), "value 4")
 
     def test_missing_solve_is_compile_error(self):
         result = judge.evaluate(
@@ -119,6 +129,15 @@ class PythonJudgeTests(unittest.TestCase):
 
 @unittest.skipUnless(NODE_BINARY.exists(), "Bundled Node.js runtime is not available")
 class JavaScriptJudgeTests(unittest.TestCase):
+    def test_console_log_is_returned_without_corrupting_results(self):
+        result = judge.evaluate(
+            "function solve(value) { console.log('value', value); return value + 1; }",
+            "javascript",
+            [make_case(1, [4], 5)],
+        )
+        self.assertEqual(result.status, "accepted")
+        self.assertEqual(result.case_results[0].stdout, "value 4")
+
     def test_javascript_solution_accepts_many_cases(self):
         cases = [make_case(index + 1, [[index, index + 1]], index * 2 + 1) for index in range(50)]
 

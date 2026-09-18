@@ -946,6 +946,7 @@ const state = {
   adminSignals: [],
   adminCalibration: [],
   adminTournaments: [],
+  adminTournamentAuditLogs: [],
   adminEditingProblemId: null,
   historyMatches: [],
   tournaments: [],
@@ -974,6 +975,7 @@ const els = {
   cases: document.querySelector("#cases"),
   editor: document.querySelector("#codeEditor"),
   highlight: document.querySelector("#codeHighlight"),
+  completions: document.querySelector("#codeCompletions"),
   language: document.querySelector("#languageSelect"),
   botLevel: document.querySelector("#botLevelSelect"),
   roomPanel: document.querySelector("#roomPanel"),
@@ -1076,6 +1078,7 @@ const els = {
   adminCalibrationList: document.querySelector("#adminCalibrationList"),
   adminTournamentsStatus: document.querySelector("#adminTournamentsStatus"),
   adminTournamentList: document.querySelector("#adminTournamentList"),
+  adminTournamentAuditList: document.querySelector("#adminTournamentAuditList"),
   adminStatus: document.querySelector("#adminStatus"),
   adminProblemList: document.querySelector("#adminProblemList"),
   adminProblemForm: document.querySelector("#adminProblemForm"),
@@ -1221,6 +1224,78 @@ function updateCodeHighlight() {
   els.highlight.scrollLeft = els.editor.scrollLeft;
 }
 
+const completionCatalog = {
+  javascript: ["const", "let", "return", "if", "else", "for", "while", "function", "console.log", "Math.max", "Math.min", "Array.from", "Object.keys", "Map", "Set", "length", "push", "slice", "includes", "reduce", "sort"],
+  typescript: ["const", "let", "return", "if", "else", "for", "while", "function", "console.log", "Math.max", "Math.min", "Array.from", "Object.keys", "Map", "Set", "length", "push", "slice", "includes", "reduce", "sort", "number", "string", "boolean", "unknown"],
+  python: ["def", "return", "if", "else", "elif", "for", "while", "in", "True", "False", "None", "len", "range", "enumerate", "sorted", "sum", "min", "max", "set", "dict", "list", "append", "items", "get", "print"],
+};
+
+let completionItems = [];
+let completionIndex = 0;
+let completionStart = 0;
+
+function closeCompletions() {
+  completionItems = [];
+  els.completions.hidden = true;
+  els.completions.innerHTML = "";
+  els.editor.removeAttribute("aria-activedescendant");
+}
+
+function completionContext(force = false) {
+  const before = els.editor.value.slice(0, els.editor.selectionStart);
+  const line = before.slice(before.lastIndexOf("\n") + 1);
+  if (/\/\/|#/.test(line) || (line.match(/['"`]/g) || []).length % 2) return null;
+  const match = before.match(/(?:^|[^\w$])([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)$/);
+  if (!match) return force ? { prefix: "", start: els.editor.selectionStart } : null;
+  if (!force && match[1].length < 2) return null;
+  return { prefix: match[1], start: els.editor.selectionStart - match[1].length };
+}
+
+function renderCompletions() {
+  els.completions.innerHTML = completionItems.map((item, index) =>
+    `<button class="code-completion" id="codeCompletion${index}" type="button" role="option" aria-selected="${index === completionIndex}" data-index="${index}"><span>${escapeHtml(item.value)}</span><small>${item.kind}</small></button>`
+  ).join("");
+  els.editor.setAttribute("aria-activedescendant", `codeCompletion${completionIndex}`);
+  els.completions.querySelector(`[data-index="${completionIndex}"]`)?.scrollIntoView({ block: "nearest" });
+}
+
+function updateCompletions(force = false) {
+  const context = completionContext(force);
+  if (!context || !completionCatalog[state.language]) return closeCompletions();
+  const identifiers = [...new Set(els.editor.value.match(/\b[A-Za-z_$][\w$]{2,}\b/g) || [])];
+  const options = [
+    ...identifiers.map((value) => ({ value, kind: "symbol" })),
+    ...completionCatalog[state.language].map((value) => ({ value, kind: "built-in" })),
+  ];
+  completionItems = [...new Map(options.map((item) => [item.value, item])).values()]
+    .filter((item) => item.value.toLowerCase().startsWith(context.prefix.toLowerCase()) && item.value !== context.prefix)
+    .slice(0, 8);
+  if (!completionItems.length) return closeCompletions();
+  completionIndex = 0;
+  completionStart = context.start;
+  const style = getComputedStyle(els.editor);
+  const lineCount = els.editor.value.slice(0, completionStart).split("\n").length;
+  const column = els.editor.value.slice(0, completionStart).split("\n").at(-1).length;
+  const measure = document.createElement("canvas").getContext("2d");
+  measure.font = style.font;
+  const x = 18 + measure.measureText("M").width * column - els.editor.scrollLeft;
+  const y = 18 + parseFloat(style.lineHeight) * lineCount - els.editor.scrollTop;
+  els.completions.style.left = `${Math.max(8, Math.min(x, els.editor.clientWidth - 210))}px`;
+  els.completions.style.top = `${Math.max(8, Math.min(y, els.editor.clientHeight - 90))}px`;
+  els.completions.hidden = false;
+  renderCompletions();
+}
+
+function acceptCompletion(index = completionIndex) {
+  const item = completionItems[index];
+  if (!item) return;
+  const end = els.editor.selectionStart;
+  els.editor.setRangeText(item.value, completionStart, end, "end");
+  closeCompletions();
+  updateCodeHighlight();
+  els.editor.focus();
+}
+
 function getCodeErrors(code) {
   const errors = [];
   const declarations = new Map();
@@ -1275,6 +1350,29 @@ function getCodeErrors(code) {
 }
 
 function insertEditorTab(event) {
+  if (completionItems.length) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      completionIndex = (completionIndex + (event.key === "ArrowDown" ? 1 : -1) + completionItems.length) % completionItems.length;
+      renderCompletions();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeCompletions();
+      return;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      acceptCompletion();
+      return;
+    }
+  }
+  if (event.ctrlKey && event.code === "Space") {
+    event.preventDefault();
+    updateCompletions(true);
+    return;
+  }
   if (event.key !== "Tab") return;
   event.preventDefault();
   const start = els.editor.selectionStart;
@@ -1293,6 +1391,7 @@ function changeLanguage(language) {
     return;
   }
   state.language = language;
+  closeCompletions();
   els.editor.value = getLanguageStarter(currentProblem(), language);
   els.status.textContent = `${els.language.options[els.language.selectedIndex].text} selected`;
   updateCodeHighlight();
@@ -1390,6 +1489,10 @@ function openAuth(mode = "signup") {
   els.authTitle.textContent = isSignup ? "Create Account" : "Login";
   els.authSubmit.textContent = isSignup ? "Create Account" : "Login";
   els.nameField.style.display = isSignup ? "grid" : "none";
+  document.querySelector("#authEmailLabel").textContent = isSignup ? "Email" : "Email or username";
+  els.authEmail.type = isSignup ? "email" : "text";
+  els.authEmail.placeholder = isSignup ? "you@example.com" : "email or username";
+  els.authEmail.autocomplete = isSignup ? "email" : "username";
   els.authPassword.autocomplete = isSignup ? "new-password" : "current-password";
   els.authMessage.textContent = "";
   els.authForm.reset();
@@ -1660,8 +1763,12 @@ async function handleAuth(event) {
   const password = els.authPassword.value.trim();
   const name = els.authName.value.trim() || email.split("@")[0] || "Player";
 
-  if (!email.includes("@")) {
+  if (state.authMode === "signup" && !email.includes("@")) {
     els.authMessage.textContent = "Enter a valid email.";
+    return;
+  }
+  if (!email) {
+    els.authMessage.textContent = "Enter an email or username.";
     return;
   }
 
@@ -2740,14 +2847,59 @@ function renderAdminTournaments(tournaments) {
             <small>${escapeHtml(tournament.status)} · ${tournament.player_count}/${tournament.max_players} players · ${activeMatches} live</small>
             <p>Champion: ${escapeHtml(champion)} · Created: ${escapeHtml(formatTournamentDate(tournament.created_at))}</p>
           </div>
-          ${canCancel ? `<button class="primary-button danger-button" data-cancel-tournament="${escapeHtml(tournament.id)}" type="button">Cancel</button>` : ""}
+          <div class="admin-tournament-actions">
+            <button class="primary-button" data-tournament-audit="${escapeHtml(tournament.id)}" type="button">Logs</button>
+            ${canCancel ? `<button class="primary-button danger-button" data-cancel-tournament="${escapeHtml(tournament.id)}" type="button">Cancel</button>` : ""}
+          </div>
         </article>
       `;
     })
     .join("");
+  els.adminTournamentList.querySelectorAll("[data-tournament-audit]").forEach((button) => {
+    button.addEventListener("click", () => loadAdminTournamentAuditLogs(button.dataset.tournamentAudit));
+  });
   els.adminTournamentList.querySelectorAll("[data-cancel-tournament]").forEach((button) => {
     button.addEventListener("click", () => cancelAdminTournament(button.dataset.cancelTournament));
   });
+}
+
+function formatAuditPayload(payload) {
+  const entries = Object.entries(payload || {}).filter(([, value]) => value !== null && value !== undefined);
+  if (!entries.length) return "No payload";
+  return entries
+    .slice(0, 6)
+    .map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : value}`)
+    .join(" · ");
+}
+
+function renderAdminTournamentAuditLogs(logs) {
+  if (!els.adminTournamentAuditList) return;
+  if (!logs.length) {
+    els.adminTournamentAuditList.innerHTML = `<p class="admin-empty">No audit events recorded for this tournament.</p>`;
+    return;
+  }
+  els.adminTournamentAuditList.innerHTML = logs
+    .map((log) => `
+      <article class="admin-review-card">
+        <strong>${escapeHtml(log.action)}</strong>
+        <small>${escapeHtml(formatTournamentDate(log.created_at))} · ${escapeHtml(log.actor_username || "system")}</small>
+        <p>${escapeHtml(formatAuditPayload(log.payload))}</p>
+      </article>
+    `)
+    .join("");
+}
+
+async function loadAdminTournamentAuditLogs(tournamentId) {
+  if (!tournamentId || !state.currentUser.isAdmin || !els.adminTournamentAuditList) return;
+  els.adminTournamentAuditList.innerHTML = `<p class="admin-empty">Loading audit trail...</p>`;
+  try {
+    const logs = await apiRequest(`/api/admin/tournaments/${tournamentId}/audit-logs?limit=40`);
+    state.adminTournamentAuditLogs = logs;
+    renderAdminTournamentAuditLogs(logs);
+  } catch (error) {
+    const details = describeApiError(error, "load tournament audit logs");
+    els.adminTournamentAuditList.innerHTML = `<p class="admin-empty">${details.terminal.map(escapeHtml).join("<br>")}</p>`;
+  }
 }
 
 async function loadAdminTournaments() {
@@ -3568,12 +3720,13 @@ function renderBackendJudgeResult(result, label) {
   els.summary.textContent = `${passed} / ${total}`;
   const detailLines = (result.case_results || []).flatMap((item) => {
     const name = `Case ${item.position}`;
-    if (item.status === "accepted") return [`${name}: OK`];
-    return [
-      `${name}: ${item.status}`,
-      `  Expected: ${formatJudgeValue(item.expected)}`,
-      `  Received: ${item.error_message ? item.error_message : formatJudgeValue(item.actual)}`,
-    ];
+    const lines = [`${name}: ${item.status === "accepted" ? "OK" : item.status}`];
+    if (Object.hasOwn(item, "expected")) lines.push(`  Expected: ${formatJudgeValue(item.expected)}`);
+    if (item.error_message || Object.hasOwn(item, "actual")) {
+      lines.push(`  Received: ${item.error_message || formatJudgeValue(item.actual)}`);
+    }
+    if (item.stdout) lines.push(`  Output: ${item.stdout}`);
+    return lines;
   });
   els.terminal.textContent = [
     `> ${label}`,
@@ -4610,9 +4763,16 @@ els.submit.addEventListener("click", submitCode);
 els.format.addEventListener("click", formatCode);
 els.solutionOpen.addEventListener("click", loadProblemSolution);
 els.language.addEventListener("change", () => changeLanguage(els.language.value));
-els.editor.addEventListener("input", updateCodeHighlight);
-els.editor.addEventListener("scroll", updateCodeHighlight);
+els.editor.addEventListener("input", () => { updateCodeHighlight(); updateCompletions(); });
+els.editor.addEventListener("scroll", () => { updateCodeHighlight(); closeCompletions(); });
 els.editor.addEventListener("keydown", insertEditorTab);
+els.editor.addEventListener("blur", () => setTimeout(closeCompletions, 120));
+els.completions.addEventListener("pointerdown", (event) => {
+  const button = event.target.closest("[data-index]");
+  if (!button) return;
+  event.preventDefault();
+  acceptCompletion(Number(button.dataset.index));
+});
 els.start.addEventListener("click", startMatch);
 if (els.createRoom) {
   els.createRoom.addEventListener("click", () => {

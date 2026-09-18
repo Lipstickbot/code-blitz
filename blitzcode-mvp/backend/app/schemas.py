@@ -41,10 +41,10 @@ class LoginRequest(BaseModel):
     @field_validator("email", mode="before")
     @classmethod
     def validate_email(cls, value: str) -> str:
-        email = value.strip().lower()
-        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
-            raise ValueError("Enter a valid email")
-        return email
+        login = value.strip().lower()
+        if not (re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", login) or re.fullmatch(r"[a-z0-9_]{3,30}", login)):
+            raise ValueError("Enter an email or username")
+        return login
 
 
 class TokenResponse(BaseModel):
@@ -397,6 +397,19 @@ class TournamentOut(BaseModel):
     participants: list[TournamentParticipantOut]
     rounds: list[TournamentRoundOut]
     bracket: list[TournamentBracketMatchOut]
+
+
+class TournamentAuditLogOut(BaseModel):
+    id: str
+    tournament_id: str
+    actor_user_id: str | None = None
+    actor_username: str | None = None
+    action: str
+    payload: dict
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class MatchParticipantOut(BaseModel):

@@ -1798,5 +1798,113 @@
       { "input": ["aaaaaaa", ["aaaa", "aaa"]], "expected": true, "hidden": true },
       { "input": ["blitzcode", ["blitz", "cod", "code"]], "expected": true, "hidden": true }
     ]
+  },
+  {
+    "slug": "signal-gap",
+    "title": "Signal Gap",
+    "difficulty": "easy",
+    "tags": ["array", "linear-scan"],
+    "concept_group": "linear_scan",
+    "estimated_seconds": 150,
+    "speed_score": 9,
+    "statement": "Given an array containing only 0 and 1, return the largest number of zeroes strictly between two consecutive 1 values. Return 0 if there are fewer than two 1 values.",
+    "starter_code_js": "function solve(bits) {\n  return 0;\n}",
+    "cases": [
+      { "input": [[1, 0, 0, 1, 0, 1]], "expected": 2, "hidden": false },
+      { "input": [[0, 0, 1, 0]], "expected": 0, "hidden": false },
+      { "input": [[1, 1, 1]], "expected": 0, "hidden": false },
+      { "input": [[0, 1, 0, 0, 0, 1, 0, 1]], "expected": 3, "hidden": true },
+      { "input": [[]], "expected": 0, "hidden": true }
+    ]
+  },
+  {
+    "slug": "balance-marker",
+    "title": "Balance Marker",
+    "difficulty": "easy",
+    "tags": ["array", "prefix-sum"],
+    "concept_group": "prefix_sum",
+    "estimated_seconds": 190,
+    "speed_score": 8,
+    "statement": "Return the first index whose elements strictly to its left sum to the same value as elements strictly to its right. Return -1 if no such index exists. Values may be negative.",
+    "starter_code_js": "function solve(nums) {\n  return -1;\n}",
+    "cases": [
+      { "input": [[1, 7, 3, 6, 5, 6]], "expected": 3, "hidden": false },
+      { "input": [[1, 2, 3]], "expected": -1, "hidden": false },
+      { "input": [[2, 1, -1]], "expected": 0, "hidden": false },
+      { "input": [[0, 0, 0]], "expected": 0, "hidden": true },
+      { "input": [[8]], "expected": 0, "hidden": true }
+    ]
+  },
+  {
+    "slug": "circular-fuel",
+    "title": "Circular Fuel",
+    "difficulty": "medium",
+    "tags": ["greedy", "array"],
+    "concept_group": "greedy",
+    "estimated_seconds": 430,
+    "speed_score": 6,
+    "statement": "At station i you receive gas[i] fuel and spend cost[i] to reach the next station on a circle. Starting with an empty tank, return the smallest starting index that completes one full lap, or -1 if impossible. Arrays have equal nonzero length and nonnegative values.",
+    "starter_code_js": "function solve(gas, cost) {\n  return -1;\n}",
+    "cases": [
+      { "input": [[1, 2, 3, 4, 5], [3, 4, 5, 1, 2]], "expected": 3, "hidden": false },
+      { "input": [[2, 3, 4], [3, 4, 3]], "expected": -1, "hidden": false },
+      { "input": [[5], [4]], "expected": 0, "hidden": false },
+      { "input": [[0, 1, 2], [1, 0, 2]], "expected": 1, "hidden": true },
+      { "input": [[1, 1], [1, 1]], "expected": 0, "hidden": true }
+    ]
+  },
+  {
+    "slug": "painted-line",
+    "title": "Painted Line",
+    "difficulty": "medium",
+    "tags": ["intervals", "sorting"],
+    "concept_group": "interval_merge",
+    "estimated_seconds": 390,
+    "speed_score": 6,
+    "statement": "Each pair [start, end] paints the half-open interval from start to end on a number line, with start <= end. Return the total length painted at least once. Overlapping intervals must be counted only once.",
+    "starter_code_js": "function solve(intervals) {\n  return 0;\n}",
+    "cases": [
+      { "input": [[[1, 4], [3, 6], [8, 10]]], "expected": 7, "hidden": false },
+      { "input": [[]], "expected": 0, "hidden": false },
+      { "input": [[[2, 2], [0, 3]]], "expected": 3, "hidden": false },
+      { "input": [[[-3, 0], [-1, 2], [2, 5]]], "expected": 8, "hidden": true },
+      { "input": [[[1, 10], [2, 3], [4, 5]]], "expected": 9, "hidden": true }
+    ]
+  },
+  {
+    "slug": "weighted-schedule",
+    "title": "Weighted Schedule",
+    "difficulty": "hard",
+    "tags": ["dynamic-programming", "binary-search", "intervals"],
+    "concept_group": "dynamic_programming",
+    "estimated_seconds": 820,
+    "speed_score": 4,
+    "statement": "Each job is [start, end, reward] with start < end and nonnegative reward. Pick nonoverlapping jobs to maximize total reward. A job ending when another starts is compatible. Return 0 for no jobs.",
+    "starter_code_js": "function solve(jobs) {\n  return 0;\n}",
+    "cases": [
+      { "input": [[[1, 3, 5], [2, 5, 6], [3, 6, 7]]], "expected": 12, "hidden": false },
+      { "input": [[[1, 4, 10], [1, 2, 4], [2, 4, 7]]], "expected": 11, "hidden": false },
+      { "input": [[]], "expected": 0, "hidden": false },
+      { "input": [[[0, 1, 3], [1, 2, 4], [0, 2, 10]]], "expected": 10, "hidden": true },
+      { "input": [[[1, 2, 0], [2, 3, 5], [3, 4, 6]]], "expected": 11, "hidden": true }
+    ]
+  },
+  {
+    "slug": "minimum-cover-window",
+    "title": "Minimum Cover Window",
+    "difficulty": "hard",
+    "tags": ["sliding-window", "string", "frequency-map"],
+    "concept_group": "sliding_window",
+    "estimated_seconds": 800,
+    "speed_score": 4,
+    "statement": "Return the shortest substring of s containing every character of t with its required multiplicity. If tied, return the earliest such substring. Return an empty string when no window exists or t is empty. Matching is case-sensitive.",
+    "starter_code_js": "function solve(s, t) {\n  return \"\";\n}",
+    "cases": [
+      { "input": ["ADOBECODEBANC", "ABC"], "expected": "BANC", "hidden": false },
+      { "input": ["a", "aa"], "expected": "", "hidden": false },
+      { "input": ["abaac", "aac"], "expected": "aac", "hidden": false },
+      { "input": ["aaab", "aab"], "expected": "aab", "hidden": true },
+      { "input": ["abc", ""], "expected": "", "hidden": true }
+    ]
   }
 ]

@@ -1543,14 +1543,48 @@ main::after {
   margin: 0;
   overflow: hidden;
   pointer-events: none;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
   color: #d7d4ca;
   padding: 18px;
   line-height: 1.55;
   font-size: 0.82rem;
   tab-size: 2;
 }
+
+.code-completions {
+  position: absolute;
+  z-index: 4;
+  min-width: 190px;
+  max-width: min(320px, calc(100% - 24px));
+  max-height: 210px;
+  overflow: auto;
+  border: 1px solid var(--line-soft);
+  background: #101010;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+}
+
+.code-completions[hidden] { display: none; }
+
+.code-completion {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 0.75rem "Cascadia Code", Consolas, monospace;
+  text-align: left;
+  cursor: pointer;
+}
+
+.code-completion small { color: var(--muted); }
+.code-completion[aria-selected="true"], .code-completion:hover { background: #303030; }
+
+body.light-theme .code-completions { background: #fff; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12); }
+body.light-theme .code-completion[aria-selected="true"], body.light-theme .code-completion:hover { background: #ececea; }
 
 #codeEditor:focus {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
@@ -2070,6 +2104,9 @@ main::after {
 .admin-tournament-card {
   align-items: center;
 }
+
+.admin-tournament-actions { display: grid; gap: 8px; min-width: 112px; }
+.admin-audit-list { display: grid; gap: 8px; max-height: 300px; overflow: auto; margin-top: 10px; }
 
 .danger-button {
   border-color: rgba(255, 255, 255, 0.3);

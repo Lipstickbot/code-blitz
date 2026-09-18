@@ -12,6 +12,7 @@ from app.models import (
     MatchTask,
     MatchmakingQueue,
     Tournament,
+    TournamentAuditLog,
     TournamentBracketMatch,
     TournamentParticipant,
     TournamentRound,
@@ -82,6 +83,17 @@ async def create_tournament(
     for bracket_match in first_round:
         await _create_match_for_bracket(db, bracket_match)
 
+    _add_tournament_audit_log(
+        db,
+        tournament.id,
+        "tournament_created",
+        actor_user_id=creator.id,
+        payload={
+            "name": tournament.name,
+            "player_count": tournament.player_count,
+            "seeds": [{"user_id": user.id, "username": user.username, "seed": index + 1} for index, user in enumerate(seeded_users)],
+        },
+    )
     await db.commit()
     await db.refresh(tournament)
     return tournament
@@ -127,7 +139,7 @@ async def get_tournament_for_user(db: AsyncSession, tournament_id: str, user: Us
     return tournament
 
 
-async def cancel_tournament(db: AsyncSession, tournament_id: str) -> Tournament:
+async def cancel_tournament(db: AsyncSession, tournament_id: str, actor_user_id: str | None = None) -> Tournament:
     tournament = await db.get(Tournament, tournament_id)
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
@@ -172,6 +184,16 @@ async def cancel_tournament(db: AsyncSession, tournament_id: str) -> Tournament:
                 match.status = "cancelled"
                 match.finished_at = now
 
+    _add_tournament_audit_log(
+        db,
+        tournament_id,
+        "admin_cancelled",
+        actor_user_id=actor_user_id,
+        payload={
+            "cancelled_match_ids": match_ids,
+            "cancelled_at": now.isoformat(),
+        },
+    )
     await db.commit()
     await db.refresh(tournament)
     await tournament_hub.broadcast(
@@ -220,6 +242,13 @@ async def advance_tournament_after_match(db: AsyncSession, match: Match) -> None
             tournament.champion_user_id = winner.user_id
             tournament.finished_at = now
         winner.status = "champion"
+        _add_tournament_audit_log(
+            db,
+            bracket_match.tournament_id,
+            "champion_decided",
+            actor_user_id=winner.user_id,
+            payload=_audit_payload_for_advancement(bracket_match, winner, loser),
+        )
         await _broadcast_tournament_update(
             bracket_match.tournament_id,
             "champion_decided",
@@ -243,6 +272,18 @@ async def advance_tournament_after_match(db: AsyncSession, match: Match) -> None
             next_round.status = "active"
         await _create_match_for_bracket(db, next_match)
 
+    _add_tournament_audit_log(
+        db,
+        bracket_match.tournament_id,
+        "winner_advanced",
+        actor_user_id=winner.user_id,
+        payload={
+            **_audit_payload_for_advancement(bracket_match, winner, loser),
+            "next_bracket_match_id": next_match.id,
+            "next_match_id": next_match.match_id,
+            "next_slot": bracket_match.next_slot,
+        },
+    )
     await _broadcast_tournament_update(
         bracket_match.tournament_id,
         "winner_advanced",
@@ -441,6 +482,42 @@ async def _get_or_create_stats(db: AsyncSession, user: User) -> UserStats:
     db.add(stats)
     await db.flush()
     return stats
+
+
+def _add_tournament_audit_log(
+    db: AsyncSession,
+    tournament_id: str,
+    action: str,
+    *,
+    actor_user_id: str | None = None,
+    payload: dict | None = None,
+) -> None:
+    db.add(
+        TournamentAuditLog(
+            tournament_id=tournament_id,
+            actor_user_id=actor_user_id,
+            action=action,
+            payload=payload or {},
+        )
+    )
+
+
+def _audit_payload_for_advancement(
+    bracket_match: TournamentBracketMatch,
+    winner: TournamentParticipant,
+    loser: TournamentParticipant,
+) -> dict:
+    return {
+        "bracket_match_id": bracket_match.id,
+        "match_id": bracket_match.match_id,
+        "round_id": bracket_match.round_id,
+        "bracket_position": bracket_match.bracket_position,
+        "winner_participant_id": winner.id,
+        "winner_user_id": winner.user_id,
+        "loser_participant_id": loser.id,
+        "loser_user_id": loser.user_id,
+        "loser_eliminated_round": loser.eliminated_round,
+    }
 
 
 async def _broadcast_tournament_update(

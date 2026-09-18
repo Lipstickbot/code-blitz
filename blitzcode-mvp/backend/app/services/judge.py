@@ -21,6 +21,7 @@ class JudgeCaseResult:
     runtime_ms: int | None = None
     error_message: str | None = None
     test_case_id: str | None = None
+    stdout: str | None = None
 
 
 @dataclass
@@ -143,6 +144,7 @@ def evaluate(code: str, language: str, test_cases: list[TestCase], timeout_secon
             runtime_ms=item.get("runtime_ms"),
             error_message=item.get("error_message"),
             test_case_id=item.get("test_case_id"),
+            stdout=item.get("stdout"),
         )
         for item in output.get("cases", [])
     ]
@@ -278,6 +280,13 @@ def _setting(name: str, default: Any) -> Any:
 JS_RUNNER = r"""
 const fs = require("fs");
 const payload = JSON.parse(fs.readFileSync(0, "utf8"));
+const debugLines = [];
+for (const level of ["log", "warn", "error"]) {
+  console[level] = (...values) => {
+    const line = values.map(value => typeof value === "string" ? value : JSON.stringify(value)).join(" ");
+    if (debugLines.join("\n").length < 4000) debugLines.push(level === "log" ? line : `${level}: ${line}`);
+  };
+}
 
 function deepEqual(a, b) {
   if (Object.is(a, b)) return true;
@@ -304,18 +313,19 @@ let solve;
 try {
   solve = Function('"use strict";\n' + payload.code + '\n; return typeof solve === "function" ? solve : null;')();
 } catch (error) {
-  console.log(JSON.stringify({ compile_error: error.message || String(error) }));
+  process.stdout.write(JSON.stringify({ compile_error: error.message || String(error) }));
   process.exit(0);
 }
 
 if (typeof solve !== "function") {
-  console.log(JSON.stringify({ compile_error: "Function solve(...) was not found." }));
+  process.stdout.write(JSON.stringify({ compile_error: "Function solve(...) was not found." }));
   process.exit(0);
 }
 
 const results = [];
 for (const testCase of payload.cases) {
   const started = Date.now();
+  debugLines.length = 0;
   try {
     const args = JSON.parse(JSON.stringify(testCase.args));
     const actual = solve(...args);
@@ -327,6 +337,7 @@ for (const testCase of payload.cases) {
       status: passed ? "accepted" : "wrong_answer",
       actual,
       expected: testCase.expected,
+      stdout: debugLines.join("\n").slice(0, 4000),
       runtime_ms: Date.now() - started
     });
   } catch (error) {
@@ -336,18 +347,21 @@ for (const testCase of payload.cases) {
       passed: false,
       status: "runtime_error",
       expected: testCase.expected,
+      stdout: debugLines.join("\n").slice(0, 4000),
       runtime_ms: Date.now() - started,
       error_message: error.message || String(error)
     });
   }
 }
 
-console.log(JSON.stringify({ cases: results }));
+process.stdout.write(JSON.stringify({ cases: results }));
 """
 
 
 PYTHON_RUNNER = r"""
 import copy
+import contextlib
+import io
 import json
 import sys
 import time
@@ -357,9 +371,11 @@ payload = json.loads(sys.stdin.read())
 
 namespace = {}
 try:
-    exec(compile(payload["code"], "solution.py", "exec"), namespace)
+    with contextlib.redirect_stdout(io.StringIO()):
+        exec(compile(payload["code"], "solution.py", "exec"), namespace)
 except Exception as error:
-    print(json.dumps({"compile_error": str(error)}))
+    line = getattr(error, "lineno", None)
+    print(json.dumps({"compile_error": f"Line {line}: {error}" if line else str(error)}))
     sys.exit(0)
 
 solve = namespace.get("solve")
@@ -370,9 +386,11 @@ if not callable(solve):
 results = []
 for test_case in payload["cases"]:
     started = time.perf_counter()
+    output = io.StringIO()
     try:
         args = copy.deepcopy(test_case["args"])
-        actual = solve(*args)
+        with contextlib.redirect_stdout(output):
+            actual = solve(*args)
         passed = actual == test_case["expected"]
         results.append({
             "test_case_id": test_case["id"],
@@ -381,6 +399,7 @@ for test_case in payload["cases"]:
             "status": "accepted" if passed else "wrong_answer",
             "actual": actual,
             "expected": test_case["expected"],
+            "stdout": output.getvalue()[:4000],
             "runtime_ms": int((time.perf_counter() - started) * 1000),
         })
     except Exception as error:
@@ -390,8 +409,9 @@ for test_case in payload["cases"]:
             "passed": False,
             "status": "runtime_error",
             "expected": test_case["expected"],
+            "stdout": output.getvalue()[:4000],
             "runtime_ms": int((time.perf_counter() - started) * 1000),
-            "error_message": str(error),
+            "error_message": f"Line {next((frame.lineno for frame in reversed(traceback.extract_tb(error.__traceback__)) if frame.filename == 'solution.py'), '?')}: {error}",
         })
 
 print(json.dumps({"cases": results}, ensure_ascii=False))

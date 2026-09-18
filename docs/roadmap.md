@@ -5,7 +5,7 @@
 - Static frontend prototype with dark/light arena UI.
 - Auth endpoints: register, login, current user.
 - Rating is stored in `user_stats` and shown only for authenticated users.
-- Problem bank seed with 100 starter tasks.
+- Problem bank seed with 106 original tasks.
 - Admin problem CRUD and separate test case management.
 - Real Python and JavaScript judge contract through `solve(...)`.
 - `Run` uses up to 5 sample tests.
@@ -52,7 +52,7 @@
 - Course detail panel and lesson completion progress tracking for enrolled free courses.
 - Course practice problem links so lessons can send users into real task practice.
 - TypeScript TS-light backend judge support for LeetCode-style `solve(...)` functions.
-- Expanded original problem library to 100 tasks with broader tags and difficulty spread.
+- Expanded original problem library to 106 tasks with broader tags and difficulty spread.
 - Admin problem calibration API and UI using submission acceptance rate and runtime signals.
 - Admin editorial review UI for approving, commenting and requesting changes on tasks.
 - Admin solution notes editing for task editorials, intended approach and edge cases.
@@ -68,18 +68,24 @@
 - Tournament spectator API and admin backend controls for listing/canceling tournament rooms.
 - Admin tournament monitor UI with active room counts and cancel action.
 - Public/shareable tournament spectator links with read-only bracket loading.
+- Tournament admin audit history for creation, cancellation, progression and champion events.
+- Editor autocomplete for Python, JavaScript and TypeScript keywords, built-ins and local symbols.
+- Judge terminal output for sample tests, clearer Python line errors and hidden-test answer redaction.
+- Local demo login by username or email.
 - Problem bank quality tests now require 100+ tasks, balanced difficulty coverage, tags, concept groups and timing metadata.
 
 ## Next
 
 - Choose hosting for staging, fill real server secrets and point DNS.
 - Run first staging deploy and verify a real browser match flow.
-- Add richer tournament admin audit logs.
+- Verify the editor and judge flow in a browser on staging.
 
 ## Later
 
 - OAuth login with Google/GitHub after local auth is stable.
 - Friend-room polish: WebSocket invite notifications and rematch flow.
-- Tournament polish: richer tournament admin audit logs.
+- Tournament polish: review audit retention and pagination as event volume grows.
 - Learning polish: more courses later, stronger recommendation signals and premium checkout integration if paid tracks return.
 - Typed adapter contract for compiled language judging: C++, Java, Go, Rust.
+- Replace TS-light source rewriting with a real TypeScript compiler and precise line diagnostics.
+- Add language-aware completion and diagnostics through a language service after the lightweight editor suggestions.

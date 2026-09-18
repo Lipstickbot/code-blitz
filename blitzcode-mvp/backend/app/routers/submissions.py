@@ -123,10 +123,13 @@ async def create_submission(
             {
                 "position": item.position,
                 "status": item.status,
-                "actual": item.actual,
-                "expected": item.expected,
                 "runtime_ms": item.runtime_ms,
-                "error_message": item.error_message,
+                **({
+                    "actual": item.actual,
+                    "expected": item.expected,
+                    "stdout": item.stdout,
+                    "error_message": item.error_message,
+                } if payload.kind == "run" else {}),
             }
             for item in judge_result.case_results
         ],
